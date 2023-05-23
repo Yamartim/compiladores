@@ -6,11 +6,11 @@ trabalhos de para matéria de compiladores
 2. Compilar com 
 
 
-$ java -jar <arquivo antlr.jar> <arquivo.g4>
+`$ java -jar <arquivo antlr.jar> <arquivo.g4>`
 
   
 3. Fazer uma main.py importando o arquivoLexer (tem um exemplo de main para o primeiro caso de teste no arquivo main.py)
   
 4. rodar a main com
   
- $ python3 main.py input.txt
+ `$ python3 main.py`

@@ -4,7 +4,8 @@ from AlgumaLexer import AlgumaLexer
 
 
 def main(argv):
-    input = FileStream(argv[1], encoding='utf-8')
+    #input = FileStream(argv[1], encoding='utf-8')
+    input = FileStream('input.txt', encoding='utf-8')
     #file_str = open('input.txt','r').read()
     lexer = AlgumaLexer(input)
 

@@ -1,8 +1,8 @@
 lexer grammar AlgumaLexer;
 
 PalavraChave
-    : (':' | 'inteiro' | 'logico' | 'algoritmo' | 'declare' | 'leia' |
-    'fim_algoritmo' | 'literal' | 'escreva' | 'real' | '(' | ')')
+    : ('inteiro' | 'logico' | 'algoritmo' | 'declare' | 'leia' |
+    'fim_algoritmo' | 'literal' | 'escreva' | 'real' | ':' | '(' | ')' | ',')
     ;
 
 fragment
@@ -18,4 +18,7 @@ WS
     ;
 Comentario 
     : '{ ' ~('\n'|'\r')* '\r'? '}' -> skip
+    ;
+Cadeia
+    : ('\'' ~('\'')* '\'') | ('"'  ~('"')* '"')
     ;

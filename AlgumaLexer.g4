@@ -13,6 +13,8 @@ Digito	:	'0'..'9';
 
 IDENT	:	Letra(Letra|Digito)* ;
 
+CADEIA  :   '"'~["\\\r\n]+?'"' ;
+
 WS
     : (' ' | '\t' | '\r' | '\n') -> skip
     ;

@@ -6,7 +6,7 @@ trabalhos de para matéria de compiladores
 2. Compilar com 
 
 
-`$ java -jar <arquivo antlr.jar> <arquivo.g4>`
+`$ java -jar <arquivo antlr.jar> <arquivo.g4> -Dlanguage=Python3`
 
   
 3. Fazer uma main.py importando o arquivoLexer (tem um exemplo de main para o primeiro caso de teste no arquivo main.py)

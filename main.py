@@ -13,9 +13,9 @@ def main(argv):
     while (t.type != Token.EOF) :
         tokenTypeTemp = lexer.symbolicNames[t.type]
         if tokenTypeTemp == 'PalavraChave':
-            print('<' + t.text + ',' + t.text + '>')
+            print('<\'' + t.text + '\',\'' + t.text + '\'>')
         else:
-            print('<' + t.text + ',' + tokenTypeTemp + '>')
+            print('<\'' + t.text + '\',' + tokenTypeTemp + '>')
         t = lexer.nextToken()
     
 if __name__ == '__main__':

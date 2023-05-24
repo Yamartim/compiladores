@@ -1,4 +1,5 @@
 antlr-4.13.0-complete.jar
+AlgumaLexer*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -5,6 +5,10 @@ PalavraChave
     'fim_algoritmo' | 'literal' | 'escreva' | 'real' | ':' | '(' | ')' | ',')
     ;
 
+OperadorArit
+    : ('/' | '+')
+    ;
+
 fragment
 Letra		:	'a'..'z' | 'A'..'Z';
 

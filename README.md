@@ -1,5 +1,7 @@
 # compiladores
 trabalhos para matéria de compiladores
+- Fernando Oliveira
+- Martim Lima
 
 # Tutorial primeira parte:
 1. Fazer o analisador léxico no arquivo .g4

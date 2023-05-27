@@ -1,6 +1,8 @@
 antlr-4.13.0-complete.jar
 AlgumaLexer*
 
+casos-de-teste/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

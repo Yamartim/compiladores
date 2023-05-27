@@ -6,7 +6,7 @@ PalavraChave
     ;
 
 OperadorArit
-    : ('/' | '+')
+    : ('*' | '/' | '+' | '-' | '%')
     ;
 Op_Relacional
     : ('=' | '<>' | '>=' | '<=' | '>' | '<')

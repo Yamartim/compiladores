@@ -1,8 +1,9 @@
 lexer grammar AlgumaLexer;
 
 PalavraChave
-    : ('inteiro' | 'logico' | 'algoritmo' | 'declare' | 'leia' |
-    'fim_algoritmo' | 'literal' | 'escreva' | 'real' | 'se' | 'entao' |':' | '(' | ')' | ',')
+    : ('inteiro' | 'logico' | 'algoritmo' | 'declare' | 'leia' | 'fim_algoritmo' | 'literal' | 'escreva' |
+    'real' | 'se' | 'entao' | 'fim_se' | 'registro' | 'fim_registro' | 'faca' | 'ate' | 'para' |
+    'fim_para' | 'caso' | 'seja' | 'fim_caso' | 'enquanto' | 'senao' | 'retorne' | ':' | '(' | ')' | ',')
     ;
 
 OperadorArit
@@ -11,7 +12,9 @@ OperadorArit
 Op_Relacional
     : ('=' | '<>' | '>=' | '<=' | '>' | '<')
     ;
-
+Atribuicao
+    : '<-'
+    ;
 fragment
 Letra		:	'a'..'z' | 'A'..'Z';
 

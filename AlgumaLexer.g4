@@ -9,11 +9,13 @@ OperadorArit
     : ('*' | '/' | '+' | '-' | '%')
     ;
 
-fragment
-Letra		:	'a'..'z' | 'A'..'Z';
+OperadorLog
+    : ('e' | 'ou')
+    ;
 
-fragment
-Digito	:	'0'..'9';
+fragment Letra	:	'a'..'z' | 'A'..'Z';
+
+fragment Digito	:	'0'..'9';
 
 IDENT	:	Letra(Letra|Digito)* ;
 

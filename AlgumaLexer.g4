@@ -2,11 +2,14 @@ lexer grammar AlgumaLexer;
 
 PalavraChave
     : ('inteiro' | 'logico' | 'algoritmo' | 'declare' | 'leia' |
-    'fim_algoritmo' | 'literal' | 'escreva' | 'real' | ':' | '(' | ')' | ',')
+    'fim_algoritmo' | 'literal' | 'escreva' | 'real' | 'se' | 'entao' |':' | '(' | ')' | ',')
     ;
 
 OperadorArit
     : ('/' | '+')
+    ;
+Op_Relacional
+    : ('=' | '<>' | '>=' | '<=' | '>' | '<')
     ;
 
 fragment

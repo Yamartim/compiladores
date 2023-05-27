@@ -1,5 +1,5 @@
 # compiladores
-trabalhos de para matéria de compiladores
+trabalhos para matéria de compiladores
 
 # Tutorial primeira parte:
 1. Fazer o analisador léxico no arquivo .g4

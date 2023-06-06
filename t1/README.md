@@ -21,4 +21,5 @@ Exemplo de execução no Ubuntu:
 4. instalar o módulo antlr runtime e rodar a main com
   
  `$ pip install -r requirements.txt`
+ 
  `$ python3 main.py <arquivo de entrada> <arquivo de saida>`

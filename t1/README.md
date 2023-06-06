@@ -7,7 +7,7 @@ Membros:
 `$ java -jar compiladores-corretor-automatico-1.0-SNAPSHOT-jar-with-dependencies.jar "python3 main.py" gcc <pasta temp> <indicar a pasta casos-de-teste> <nome do grupo> "t1"`
 
 Exemplo de execução no Ubuntu:
-`java -jar compiladores-corretor-automatico-1.0-SNAPSHOT-jar-with-dependencies.jar "python3 main.py" gcc ../temp/ ../casos-de-teste/casos-de-teste "7" "t1"`
+`$ java -jar compiladores-corretor-automatico-1.0-SNAPSHOT-jar-with-dependencies.jar "python3 main.py" gcc ../temp/ ../casos-de-teste/casos-de-teste "7" "t1"`
 
 ### Tutorial t1 passo a passo:
 1. Fazer o analisador léxico no arquivo .g4

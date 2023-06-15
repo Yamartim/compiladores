@@ -9,12 +9,16 @@ from antlr4.error.ErrorListener import ErrorListener
 #mas, como o q só conta é o que está nos casos de teste, acho que da para usar,
 #já que a saída impressa no terminal não é considerada
 class MyErrorListener( ErrorListener ):
-
-    def __init__(self):
+    output = None
+    def __init__(self, file):
         super(MyErrorListener, self).__init__()
+        self.output = file
 
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):  
-        print('Linha '+ str(line)+ ' : erro sintatico proximo a ' + offendingSymbol.text)
+        #print('Linha '+ str(line)+ ' : erro sintatico proximo a ' + offendingSymbol.text)
+        if(offendingSymbol.text == '<EOF>'):
+            offendingSymbol.text = 'EOF'
+        self.output.write('Linha '+ str(line)+ ': erro sintatico proximo a ' + offendingSymbol.text + '\n')
         #transformar o print para uma linha no arquivo de saída.
 
     def reportAmbiguity(self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs):
@@ -33,8 +37,9 @@ def main(argv):
     lexer = AlgumaLexer(input)
     stream = CommonTokenStream(lexer)
     parser = AlgumaParser(stream)
-    parser.addErrorListener( MyErrorListener() )
+    parser.addErrorListener( MyErrorListener(file_out))
     parser.programa()
+    file_out.write('Fim da compilacao\n')
     '''
     print(tree.toStringTree(recog=parser))
     t = lexer.nextToken()

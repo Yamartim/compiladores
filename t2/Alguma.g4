@@ -1,8 +1,8 @@
-lexer grammar AlgumaLexer;
+grammar Alguma;
 
-programa : declaracoes 'algoritmo' corpo 'fim_algoritmo';
+programa : declaracoes 'algoritmo' corpo 'fim_algoritmo' EOF;
 
-declaracoes : decl_local_global+;
+declaracoes : decl_local_global*;
 
 decl_local_global : declaracao_local | declaracao_global;
 
@@ -29,9 +29,11 @@ valor_constante : Cadeia | NUM_INT | NUM_REAL | 'verdadeiro' | 'falso';
 
 registro : 'registro' variavel* 'fim_registro';
 
-declaracao_global : 'procedimento' IDENT '('parametros?')' declaracao_local* cmd* 'fim_procedimento';
+declaracao_global : 'procedimento' IDENT '(' parametros? ')' declaracao_local* cmd* 'fim_procedimento'
+    | 'funcao' IDENT '(' parametros? ')' ':' tipo_estendido declaracao_local* cmd* 'fim_funcao'
+    ;
 
-parametro : 'var' identificador (',' identificador)* ':' tipo_estendido;
+parametro : 'var'? identificador (',' identificador)* ':' tipo_estendido;
 
 parametros : parametro (',' parametro)*;
 
@@ -46,7 +48,7 @@ cmdEscreva : 'escreva' '(' expressao (',' expressao)* ')';
 
 cmdSe : 'se' expressao 'entao' cmd* ('senao' cmd*)? 'fim_se';
 
-cmdCaso : 'casp' exp_aritmetica 'seja' selecao ('senao' cmd*)? 'fim_caso';
+cmdCaso : 'caso' exp_aritmetica 'seja' selecao ('senao' cmd*)? 'fim_caso';
 
 cmdPara : 'para' IDENT '<-' exp_aritmetica 'ate' exp_aritmetica 'faca' cmd* 'fim_para';
 
@@ -64,7 +66,7 @@ selecao : item_selecao*;
 
 item_selecao : constantes ':' cmd*;
 
-constantes : numero_intervalo (',' numero_intervalo);
+constantes : numero_intervalo (',' numero_intervalo)*;
 
 numero_intervalo : op_unario? NUM_INT ('..' op_unario? NUM_INT)?;
 
@@ -97,7 +99,7 @@ exp_relacional : exp_aritmetica (op_relacional exp_aritmetica)?;
 
 op_relacional : '='|'<>'|'>='|'<='|'>'|'<';
 
-expressao : termo_logico (op_logico_1 termo_logico);
+expressao : termo_logico (op_logico_1 termo_logico)*;
 
 termo_logico : fator_logico (op_logico_2 fator_logico)*;
 
@@ -140,4 +142,3 @@ Cadeia
 ErroComentario
     : '{' ~('\n'|'\r'|'}')* '\n'
     ;
-

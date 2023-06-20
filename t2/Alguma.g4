@@ -25,7 +25,7 @@ tipo_basico_ident : tipo_basico | IDENT;
 
 tipo_estendido : '^'? tipo_basico_ident;
 
-valor_constante : Cadeia | NUM_INT | NUM_REAL | 'verdadeiro' | 'falso';
+valor_constante : CADEIA | NUM_INT | NUM_REAL | 'verdadeiro' | 'falso';
 
 registro : 'registro' variavel* 'fim_registro';
 
@@ -128,7 +128,7 @@ NUM_INT
     :   (Digito)+
     ;
 
-CADEIA  :   '"'~["\\\r\n]+?'"' ;
+
 
 WS
     : (' ' | '\t' | '\r' | '\n') -> skip
@@ -136,9 +136,15 @@ WS
 Comentario 
     : '{' ~('\n'|'\r')* '\r'? '}' -> skip
     ;
-Cadeia
-    : ('\'' ~('\'')* '\'') | ('"'  ~('"')* '"')
+CADEIA
+    : ('\'' ~('\'' | '\n')* '\'') | ('"'  ~('"' | '\n')* '"')
+    ;
+CADEIANAOFECHADA
+    : ('\'' ~('\'' | '\n')* '\n') | ('"'  ~('"' | '\n')* '\n')
     ;
 ErroComentario
     : '{' ~('\n'|'\r'|'}')* '\n'
+    ;
+NaoIdentificado
+    :  .
     ;

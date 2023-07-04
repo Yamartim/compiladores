@@ -15,7 +15,7 @@ class MyErrorListener( ErrorListener ):
         #print('Linha '+ str(line)+ ' : erro sintatico proximo a ' + offendingSymbol.text)
         if(offendingSymbol.text == '<EOF>'):
             offendingSymbol.text = 'EOF'
-        self.output.write('Linha '+ str(line)+ ': erro sintatico proximo a ' + offendingSymbol.text + '\n')
+        self.output.write(f'Linha {line}: erro sintatico proximo a {offendingSymbol.text}\n')
         raise Exception("erro")
 
     def reportAmbiguity(self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs):

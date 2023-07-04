@@ -47,21 +47,21 @@ def main(argv):
     
     while (t.type != Token.EOF) :
         
-        tokenTypeTemp = vocabulary[t.type-1]
-        print(tokenTypeTemp)
+        token_type_temp = vocabulary[t.type-1]
+        print(token_type_temp)
 
         # tokens são analisados e printados no na saida até que se encontre um erro ou chegue ao final
-        if tokenTypeTemp == 'NaoIdentificado':
+        if token_type_temp == 'NaoIdentificado':
             print('aqui')
             file_out.write(f"Linha {t.line}: {t.text} - simbolo nao identificado\n")
             file_out.write('Fim da compilacao\n')
             return
-        elif tokenTypeTemp == 'ErroComentario':
+        elif token_type_temp == 'ErroComentario':
             print('aqui')
             file_out.write(f"Linha {t.line}: comentario nao fechado\n")
             file_out.write('Fim da compilacao\n')
             return
-        elif tokenTypeTemp == 'CADEIANAOFECHADA':
+        elif token_type_temp == 'CADEIANAOFECHADA':
             print('aqui')
             file_out.write(f"Linha {t.line}: cadeia literal nao fechada\n")
             file_out.write('Fim da compilacao\n')

@@ -4,7 +4,7 @@ from AlgumaLexer import AlgumaLexer
 from AlgumaParser import AlgumaParser
 from antlr4.error.ErrorListener import ErrorListener
 
-
+print('t3')
 class MyErrorListener( ErrorListener ):
     output = None
     def __init__(self, file):

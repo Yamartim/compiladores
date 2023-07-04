@@ -1,6 +1,10 @@
 antlr-4.13.0-complete.jar
-AlgumaLexer*
 
+*Lexer.py
+*Listener.py
+*.interp
+*.tokens
+.antlr/
 casos-de-teste/
 
 # Byte-compiled / optimized / DLL files

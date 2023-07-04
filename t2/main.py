@@ -1,5 +1,5 @@
-import sys
-from antlr4 import *
+from sys import argv
+from antlr4 import FileStream, CommonTokenStream, Token
 from AlgumaLexer import AlgumaLexer
 from AlgumaParser import AlgumaParser
 from antlr4.error.ErrorListener import ErrorListener
@@ -83,4 +83,4 @@ def main(argv):
     file_out.write('Fim da compilacao\n')
     
 if __name__ == '__main__':
-    main(sys.argv)
+    main(argv)

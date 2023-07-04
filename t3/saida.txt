@@ -1,0 +1,2 @@
+Linha 1: cadeia literal nao fechada
+Fim da compilacao

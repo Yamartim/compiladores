@@ -60,7 +60,7 @@ class AlgumaVisitor(ParseTreeVisitor):
 
                     if TabelaDeSimbolos.existe(ident.text):
                         #printar erro porque a variavel ja foi declarada
-                        listaErros.adicionarErroSemantico(ident, 'variavel ja foi declarada')
+                        listaErros.adicionarErroSemantico(ident, 'identificador '+ ident.text + ' ja declarado anteriormente')
                     else:
                         TabelaDeSimbolos.inserir(ident.text, tipoVar.getText())
 
@@ -139,37 +139,26 @@ class AlgumaVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#cmdLeia.
     def visitCmdLeia(self, ctx:AlgumaParser.CmdLeiaContext):
-        
 
-        i = 0
-        while ctx.identificador(i) != None:
-            t = ctx.identificador(i).IDENT(0).getSymbol()
-            i += 1
-            print(t.text)
-            if not TabelaDeSimbolos.existe(t.text):
-                listaErros.adicionarErroSemantico(t,  'identificador ' + t.text + ' nao declarado')
-            
-
-        
-        '''
-        for i in range(0,80):
-            t = ctx.getTokens(i)
-            if t != []:
-                print(i, ' nao é None')
-                #print(t)
-                #print(dir(t[0].symbol))
-                print(t[0].symbol.text)
-                print('linha :', t[0].symbol.line)
-                print('-------------------------')
-        '''
+        self.verificarIdentVariavel(ctx)
 
         return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by AlgumaParser#cmdEscreva.
     def visitCmdEscreva(self, ctx:AlgumaParser.CmdEscrevaContext):
+
+
         return self.visitChildren(ctx)
 
+    def verificarIdentVariavel(self, ctx):
+        i = 0
+        while ctx.identificador(i) != None:
+            t = ctx.identificador(i).IDENT(0).getSymbol()
+            if not TabelaDeSimbolos.existe(t.text):
+                listaErros.adicionarErroSemantico(t,  'identificador ' + t.text + ' nao declarado')
+            i += 1
+        return
 
     # Visit a parse tree produced by AlgumaParser#cmdSe.
     def visitCmdSe(self, ctx:AlgumaParser.CmdSeContext):
@@ -273,6 +262,10 @@ class AlgumaVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#parcela_unario.
     def visitParcela_unario(self, ctx:AlgumaParser.Parcela_unarioContext):
+        if ctx.identificador() != None:            
+            t = ctx.identificador().IDENT(0).getSymbol()
+            if not TabelaDeSimbolos.existe(t.text):
+                listaErros.adicionarErroSemantico(t,  'identificador ' + t.text + ' nao declarado')
         return self.visitChildren(ctx)
 
 

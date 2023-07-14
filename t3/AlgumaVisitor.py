@@ -48,9 +48,11 @@ class AlgumaVisitor(ParseTreeVisitor):
                     if tipoVar != None:
                         tipoVar = tipoVar.getSymbol()
 
-                        if not TabelaDeSimbolos.existe(ident.text):
+                        if not TabelaDeSimbolos.existe(tipoVar.text):
                         
-                            listaErros.adicionarErroSemantico(ident, 'tipo ' + tipoVar.text + ' nao declarado')
+                            listaErros.adicionarErroSemantico(tipoVar, 'tipo ' + tipoVar.text + ' nao declarado')
+                            tipoVar.text = "INVALIDO"
+                        TabelaDeSimbolos.inserir(ident.text, tipoVar.text)
                     
                         #print('++++++',self.parser.RULE_tipo_basico)
                         #tipoVar = tipoVar.getToken(AlgumaParser.RULE_tipo_basico,0)
@@ -63,6 +65,7 @@ class AlgumaVisitor(ParseTreeVisitor):
                         listaErros.adicionarErroSemantico(ident, 'identificador '+ ident.text + ' ja declarado anteriormente')
                     else:
                         TabelaDeSimbolos.inserir(ident.text, tipoVar.getText())
+                        
 
         return self.visitChildren(ctx)
 

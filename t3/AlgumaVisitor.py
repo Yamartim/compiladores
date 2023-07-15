@@ -10,6 +10,10 @@ from TabelaDeSimbolos import TabelaDeSimbolos
 class AlgumaVisitor(ParseTreeVisitor):
     tabela = None
     parser = None
+    tiposCompativeis = {"inteiro" : ["inteiro"],
+                        "real" : ["inteiro", "real"],
+                        "literal" : ["literal"],
+                        "INVALIDO": ["inteiro", "real", "literal", "INVALIDO"]}
 
     # Visit a parse tree produced by AlgumaParser#programa.
     def visitPrograma(self, ctx:AlgumaParser.ProgramaContext, parser):
@@ -190,7 +194,85 @@ class AlgumaVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#cmdAtribuicao.
     def visitCmdAtribuicao(self, ctx:AlgumaParser.CmdAtribuicaoContext):
+        #print(dir(ctx))
+        ident = ctx.identificador().IDENT(0).symbol
+        
+        
+        if TabelaDeSimbolos.existe(ident.text):
+            #existe e entao, verificar qual tipo
+            tipo = TabelaDeSimbolos.verificar(ident.text)
+            
+            #dar um jeito de ver se a expressao só faz operações com o mesmo tipo
+            exp_aritimetica_temp = ctx.expressao().termo_logico(0).fator_logico(0).parcela_logica().exp_relacional().exp_aritmetica(0)
+            aux = self.verificarTipo(exp_aritimetica_temp, tipo)
+            if aux != tipo:
+                listaErros.adicionarErroSemantico(ident, "atribuicao nao compativel para " + ident.text)
+                                
+
+        else:
+            #nao existe, colocar erro
+            listaErros.adicionarErroSemantico(ident, 'identificador ' + ident.text + ' nao declarado')
+
+        
         return self.visitChildren(ctx)
+    
+    def verificarTipo(self, ctx, tipo):
+        i = 0
+        flag = True
+        ret = None
+        ctx_type = type(ctx)
+        children = None
+
+
+        if ctx == None:
+            return None
+
+        if ctx_type is self.parser.ParcelaContext:
+            if ctx.parcela_nao_unario() != None:
+                if ctx.parcela_nao_unario().CADEIA() != None:
+                    return 'literal'
+                
+            elif ctx.parcela_unario().identificador() != None or ctx.parcela_unario().IDENT() != None:
+                if ctx.parcela_unario().identificador() != None:
+                    ident = ctx.parcela_unario().identificador().IDENT(0).symbol
+                else:
+                    ident = ctx.parcela_unario().IDENT(0).symbol
+                                    
+
+                if TabelaDeSimbolos.existe(ident.text):
+                    return TabelaDeSimbolos.verificar(ident.text)
+                else:
+                    #identificador nao existe, adicionar erro
+                    listaErros.adicionarErroSemantico(ident, "identificador " + ident.text + " nao declarado")
+                    TabelaDeSimbolos.inserir(ident.text, "INVALIDO")
+                    return "INVALIDO"
+            elif ctx.parcela_unario().NUM_INT() != None:
+                
+                return "inteiro"
+            else:
+                
+                return "real"
+            
+
+
+        if ctx_type is self.parser.Exp_aritmeticaContext:
+            children = ctx.termo
+        elif ctx_type is self.parser.TermoContext:
+            children = ctx.fator
+        elif ctx_type is self.parser.FatorContext:
+            children = ctx.parcela
+        
+
+        while flag:
+            aux = self.verificarTipo(children(i), tipo)
+            if aux == None or aux == []:
+                flag = False
+            elif aux not in AlgumaVisitor.tiposCompativeis[tipo]:
+                return aux
+            i += 1
+
+        return tipo
+        
 
 
     # Visit a parse tree produced by AlgumaParser#cmdChamada.

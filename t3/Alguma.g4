@@ -118,7 +118,7 @@ fragment Letra	:	'a'..'z' | 'A'..'Z';
 
 fragment Digito	:	'0'..'9';
 
-IDENT	:	Letra(Letra|Digito)* ;
+IDENT	:	Letra(Letra|Digito|'_')* ;
 
 NUM_REAL
     :   (Digito)+ '.' (Digito)+

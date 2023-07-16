@@ -1,2 +1,2 @@
-Linha 1: cadeia literal nao fechada
+Linha 10: identificador abastecimento nao declarado
 Fim da compilacao

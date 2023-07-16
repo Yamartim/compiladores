@@ -3,7 +3,7 @@ from antlr4 import FileStream, CommonTokenStream, Token
 from AlgumaLexer import AlgumaLexer
 from AlgumaParser import AlgumaParser
 from antlr4.error.ErrorListener import ErrorListener
-from AlgumaVisitor import AlgumaVisitor
+from AlgumaVisitor2 import AlgumaVisitor
 from listaErros import listaErros
 
 

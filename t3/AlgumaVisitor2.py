@@ -205,7 +205,7 @@ class AlgumaVisitor(ParseTreeVisitor):
             tipo = TabelaDeSimbolos.verificar(ident.text)
             
             #dar um jeito de ver se a expressao só faz operações com o mesmo tipo
-            exp_aritimetica_temp = ctx.expressao().termo_logico(0).fator_logico(0).parcela_logica().exp_relacional().exp_aritmetica(0)
+            exp_aritimetica_temp = ctx.expressao().termo_logico(0).fator_logico(0).parcela_logica().exp_relacional()
             aux = self.verificarTipo(exp_aritimetica_temp, tipo)
             if aux != tipo:
                 listaErros.adicionarErroSemantico(ident, "atribuicao nao compativel para " + ident.text)
@@ -257,7 +257,7 @@ class AlgumaVisitor(ParseTreeVisitor):
             
 
         if ctx_type is self.parser.Exp_relacionalContext:
-            children = ctx.exp_relacional
+            children = ctx.exp_aritmetica
         elif ctx_type is self.parser.Exp_aritmeticaContext:
             children = ctx.termo
         elif ctx_type is self.parser.TermoContext:

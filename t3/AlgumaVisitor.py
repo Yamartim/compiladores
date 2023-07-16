@@ -13,7 +13,8 @@ class AlgumaVisitor(ParseTreeVisitor):
     tiposCompativeis = {"inteiro" : ["inteiro"],
                         "real" : ["inteiro", "real"],
                         "literal" : ["literal"],
-                        "INVALIDO": ["inteiro", "real", "literal", "INVALIDO"]}
+                        "logico" : ["logico", "inteiro", "real"],
+                        "INVALIDO": ["inteiro", "real", "literal", "INVALIDO"],}
 
     # Visit a parse tree produced by AlgumaParser#programa.
     def visitPrograma(self, ctx:AlgumaParser.ProgramaContext, parser):
@@ -254,8 +255,9 @@ class AlgumaVisitor(ParseTreeVisitor):
                 return "real"
             
 
-
-        if ctx_type is self.parser.Exp_aritmeticaContext:
+        if ctx_type is self.parser.Exp_relacionalContext:
+            children = ctx.exp_relacional
+        elif ctx_type is self.parser.Exp_aritmeticaContext:
             children = ctx.termo
         elif ctx_type is self.parser.TermoContext:
             children = ctx.fator

@@ -21,6 +21,7 @@ class AlgumaVisitor(ParseTreeVisitor):
         tabela = TabelaDeSimbolos()
         lista = listaErros()
         AlgumaVisitor.parser = parser
+        print(ctx.declaracoes())
         return self.visitChildren(ctx)
 
 

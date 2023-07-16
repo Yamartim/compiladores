@@ -21,6 +21,6 @@ Exemplo de execução no Ubuntu:
   
  `$ pip install -r requirements.txt`
  
-    e rodar a main com:
+  e rodar a main com:
 
  `$ python3 main.py <arquivo de entrada> <arquivo de saida>`

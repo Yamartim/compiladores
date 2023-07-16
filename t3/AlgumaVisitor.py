@@ -14,7 +14,7 @@ class AlgumaVisitor(ParseTreeVisitor):
                         "real" : ["inteiro", "real"],
                         "literal" : ["literal"],
                         "logico" : ["logico", "inteiro", "real"],
-                        "INVALIDO": ["inteiro", "real", "literal", "INVALIDO"],}
+                        "INVALIDO": ["inteiro", "real", "literal", "INVALIDO"]}
 
     # Visit a parse tree produced by AlgumaParser#programa.
     def visitPrograma(self, ctx:AlgumaParser.ProgramaContext, parser):

@@ -3,24 +3,27 @@ from antlr4 import *
 
 from AlgumaParser import AlgumaParser
 from listaErros import listaErros
-from TabelaDeSimbolos import TabelaDeSimbolos
+#from TabelaDeSimbolos import TabelaDeSimbolos
 
 # This class defines a complete generic visitor for a parse tree produced by AlgumaParser.
 
 class AlgumaVisitor(ParseTreeVisitor):
-    tabela = None
-    parser = None
-    tiposCompativeis = {"inteiro" : ["inteiro"],
-                        "real" : ["inteiro", "real"],
-                        "literal" : ["literal"],
-                        "logico" : ["logico", "inteiro", "real"],
-                        "INVALIDO": ["inteiro", "real", "literal", "INVALIDO"]}
 
     # Visit a parse tree produced by AlgumaParser#programa.
     def visitPrograma(self, ctx:AlgumaParser.ProgramaContext, parser):
-        tabela = TabelaDeSimbolos()
+        #tabela = TabelaDeSimbolos()
+        
+        self.tabela = dict()
+
+        self.parser = parser
+        
+        self.tiposCompativeis = {"inteiro" : ["inteiro"],
+                            "real" : ["inteiro", "real"],
+                            "literal" : ["literal"],
+                            "logico" : ["logico", "inteiro", "real"],
+                            "INVALIDO": ["inteiro", "real", "literal", "INVALIDO"]}
+
         lista = listaErros()
-        AlgumaVisitor.parser = parser
         print(ctx.declaracoes())
         return self.visitChildren(ctx)
 
@@ -54,23 +57,27 @@ class AlgumaVisitor(ParseTreeVisitor):
                     if tipoVar != None:
                         tipoVar = tipoVar.getSymbol()
 
-                        if not TabelaDeSimbolos.existe(tipoVar.text):
+                        # if not TabelaDeSimbolos.existe(ident.text):
+                        if not tipoVar.text in self.tabela:
                         
                             listaErros.adicionarErroSemantico(tipoVar, 'tipo ' + tipoVar.text + ' nao declarado')
                             tipoVar.text = "INVALIDO"
-                        TabelaDeSimbolos.inserir(ident.text, tipoVar.text)
-                    
+                        #TabelaDeSimbolos.inserir(ident.text, tipoVar.text)
+                        self.tabela[ident.text] = tipoVar.text
+
                         #print('++++++',self.parser.RULE_tipo_basico)
                         #tipoVar = tipoVar.getToken(AlgumaParser.RULE_tipo_basico,0)
                 else:
                     #só vai cair aqui se o tipo for um dos tipos basicos declarados
                     tipoVar = ctx.variavel().tipo().tipo_estendido().tipo_basico_ident().tipo_basico()
 
-                    if TabelaDeSimbolos.existe(ident.text):
+                    #if TabelaDeSimbolos.existe(ident.text):
+                    if ident.text in self.tabela:
                         #printar erro porque a variavel ja foi declarada
                         listaErros.adicionarErroSemantico(ident, 'identificador '+ ident.text + ' ja declarado anteriormente')
                     else:
-                        TabelaDeSimbolos.inserir(ident.text, tipoVar.getText())
+                        #TabelaDeSimbolos.inserir(ident.text, tipoVar.getText())
+                        self.tabela[ident.text] = tipoVar.getText()
                         
 
         return self.visitChildren(ctx)
@@ -164,7 +171,8 @@ class AlgumaVisitor(ParseTreeVisitor):
         i = 0
         while ctx.identificador(i) != None:
             t = ctx.identificador(i).IDENT(0).getSymbol()
-            if not TabelaDeSimbolos.existe(t.text):
+            #if not TabelaDeSimbolos.existe(t.text):
+            if not t.text in self.tabela:
                 listaErros.adicionarErroSemantico(t,  'identificador ' + t.text + ' nao declarado')
             i += 1
         return
@@ -200,10 +208,12 @@ class AlgumaVisitor(ParseTreeVisitor):
         ident = ctx.identificador().IDENT(0).symbol
         
         
-        if TabelaDeSimbolos.existe(ident.text):
+        #if TabelaDeSimbolos.existe(ident.text):
+        if ident.text in self.tabela:
             #existe e entao, verificar qual tipo
-            tipo = TabelaDeSimbolos.verificar(ident.text)
-            
+            #tipo = TabelaDeSimbolos.verificar(ident.text)
+            tipo = self.tabela[ident.text]
+
             #dar um jeito de ver se a expressao só faz operações com o mesmo tipo
             exp_aritimetica_temp = ctx.expressao().termo_logico(0).fator_logico(0).parcela_logica().exp_relacional()
             aux = self.verificarTipo(exp_aritimetica_temp, tipo)
@@ -241,12 +251,15 @@ class AlgumaVisitor(ParseTreeVisitor):
                     ident = ctx.parcela_unario().IDENT(0).symbol
                                     
 
-                if TabelaDeSimbolos.existe(ident.text):
-                    return TabelaDeSimbolos.verificar(ident.text)
+                #if TabelaDeSimbolos.existe(ident.text):
+                if ident.text in self.tabela:
+                    #return TabelaDeSimbolos.verificar(ident.text)
+                    return self.tabela[ident.text]
                 else:
                     #identificador nao existe, adicionar erro
                     listaErros.adicionarErroSemantico(ident, "identificador " + ident.text + " nao declarado")
-                    TabelaDeSimbolos.inserir(ident.text, "INVALIDO")
+                    #TabelaDeSimbolos.inserir(ident.text, "INVALIDO")
+                    self.tabela[ident.text] = "INVALIDO"
                     return "INVALIDO"
             elif ctx.parcela_unario().NUM_INT() != None:
                 
@@ -352,7 +365,8 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitParcela_unario(self, ctx:AlgumaParser.Parcela_unarioContext):
         if ctx.identificador() != None:            
             t = ctx.identificador().IDENT(0).getSymbol()
-            if not TabelaDeSimbolos.existe(t.text):
+            #if not TabelaDeSimbolos.existe(t.text):
+            if t.text not in self.tabela:
                 listaErros.adicionarErroSemantico(t,  'identificador ' + t.text + ' nao declarado')
         return self.visitChildren(ctx)
 

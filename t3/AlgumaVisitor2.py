@@ -1,5 +1,7 @@
 # Generated from Alguma.g4 by ANTLR 4.13.0
+from imp import init_builtin
 from antlr4 import *
+from colorama import init
 
 from AlgumaParser import AlgumaParser
 from listaErros import listaErros
@@ -13,7 +15,7 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitPrograma(self, ctx:AlgumaParser.ProgramaContext, parser):
         #tabela = TabelaDeSimbolos()
         
-        self.tabela = dict()
+        self.tabela_simbolos = dict()
 
         self.parser = parser
 
@@ -28,6 +30,7 @@ class AlgumaVisitor(ParseTreeVisitor):
         print(ctx.declaracoes())
         return self.visitChildren(ctx)
 
+#region metodos nao usados 1
 
     # Visit a parse tree produced by AlgumaParser#declaracoes.
     def visitDeclaracoes(self, ctx:AlgumaParser.DeclaracoesContext):
@@ -38,6 +41,7 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitDecl_local_global(self, ctx:AlgumaParser.Decl_local_globalContext):
         return self.visitChildren(ctx)
 
+#endregion
 
     # Visit a parse tree produced by AlgumaParser#declaracao_local.
     def visitDeclaracao_local(self, ctx:AlgumaParser.Declaracao_localContext):
@@ -53,19 +57,19 @@ class AlgumaVisitor(ParseTreeVisitor):
                 ident = ctx.variavel().identificador(i).IDENT(0).getSymbol()
                 i += 1
                 tipoVar = None
-                if ctx.variavel().tipo().tipo_estendido().tipo_basico_ident().IDENT() != None:
+                if ctx.variavel().tipo().tipo_estendido().tipo_basico_ident().IDENT() is not None:
                     tipoVar = ctx.variavel().tipo().tipo_estendido().tipo_basico_ident().IDENT()
-                    if tipoVar != None:
+                    if tipoVar is not None:
                         tipoVar = tipoVar.getSymbol()
 
                         # if not TabelaDeSimbolos.existe(ident.text):
-                        if not tipoVar.text in self.tabela:
+                        if not tipoVar.text in self.tabela_simbolos:
                         
                             #listaErros.adicionarErroSemantico(tipoVar, 'tipo ' + tipoVar.text + ' nao declarado')
                             self.erros.adicionarErroVarNaoDecl(t)
                             tipoVar.text = "INVALIDO"
                         #TabelaDeSimbolos.inserir(ident.text, tipoVar.text)
-                        self.tabela[ident.text] = tipoVar.text
+                        self.tabela_simbolos[ident.text] = tipoVar.text
 
                         #print('++++++',self.parser.RULE_tipo_basico)
                         #tipoVar = tipoVar.getToken(AlgumaParser.RULE_tipo_basico,0)
@@ -74,18 +78,19 @@ class AlgumaVisitor(ParseTreeVisitor):
                     tipoVar = ctx.variavel().tipo().tipo_estendido().tipo_basico_ident().tipo_basico()
 
                     #if TabelaDeSimbolos.existe(ident.text):
-                    if ident.text in self.tabela:
+                    if ident.text in self.tabela_simbolos:
                         #printar erro porque a variavel ja foi declarada
                         #listaErros.adicionarErroSemantico(ident, f'identificador '+ ident.text + ' ja declarado anteriormente')
                         self.erros.adicionarErroSemantico(ident, f'identificador {ident.text} ja declarado anteriormente')
 
                     else:
                         #TabelaDeSimbolos.inserir(ident.text, tipoVar.getText())
-                        self.tabela[ident.text] = tipoVar.getText()
+                        self.tabela_simbolos[ident.text] = tipoVar.getText()
                         
 
         return self.visitChildren(ctx)
 
+#region metodos nao usados 2
 
     # Visit a parse tree produced by AlgumaParser#variavel.
     def visitVariavel(self, ctx:AlgumaParser.VariavelContext):
@@ -156,6 +161,7 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitCmd(self, ctx:AlgumaParser.CmdContext):
         return self.visitChildren(ctx)
 
+#endregion
 
     # Visit a parse tree produced by AlgumaParser#cmdLeia.
     def visitCmdLeia(self, ctx:AlgumaParser.CmdLeiaContext):
@@ -167,8 +173,6 @@ class AlgumaVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#cmdEscreva.
     def visitCmdEscreva(self, ctx:AlgumaParser.CmdEscrevaContext):
-
-
         return self.visitChildren(ctx)
 
     def verificarIdentVariavel(self, ctx):
@@ -176,12 +180,14 @@ class AlgumaVisitor(ParseTreeVisitor):
         while ctx.identificador(i) != None:
             t = ctx.identificador(i).IDENT(0).getSymbol()
             #if not TabelaDeSimbolos.existe(t.text):
-            if not t.text in self.tabela:
+            if not t.text in self.tabela_simbolos:
                 #listaErros.adicionarErroSemantico(t,  'identificador ' + t.text + ' nao declarado')
                 self.erros.adicionarErroVarNaoDecl(t)
 
             i += 1
         return
+
+#region metodos nao usados 3
 
     # Visit a parse tree produced by AlgumaParser#cmdSe.
     def visitCmdSe(self, ctx:AlgumaParser.CmdSeContext):
@@ -207,6 +213,7 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitCmdFaca(self, ctx:AlgumaParser.CmdFacaContext):
         return self.visitChildren(ctx)
 
+#endregion
 
     # Visit a parse tree produced by AlgumaParser#cmdAtribuicao.
     def visitCmdAtribuicao(self, ctx:AlgumaParser.CmdAtribuicaoContext):
@@ -215,10 +222,10 @@ class AlgumaVisitor(ParseTreeVisitor):
         
         
         #if TabelaDeSimbolos.existe(ident.text):
-        if ident.text in self.tabela:
+        if ident.text in self.tabela_simbolos:
             #existe e entao, verificar qual tipo
             #tipo = TabelaDeSimbolos.verificar(ident.text)
-            tipo = self.tabela[ident.text]
+            tipo = self.tabela_simbolos[ident.text]
 
             #dar um jeito de ver se a expressao só faz operações com o mesmo tipo
             exp_aritimetica_temp = ctx.expressao().termo_logico(0).fator_logico(0).parcela_logica().exp_relacional()
@@ -261,16 +268,16 @@ class AlgumaVisitor(ParseTreeVisitor):
                                     
 
                 #if TabelaDeSimbolos.existe(ident.text):
-                if ident.text in self.tabela:
+                if ident.text in self.tabela_simbolos:
                     #return TabelaDeSimbolos.verificar(ident.text)
-                    return self.tabela[ident.text]
+                    return self.tabela_simbolos[ident.text]
                 else:
                     #identificador nao existe, adicionar erro
                     #listaErros.adicionarErroSemantico(ident, "identificador " + ident.text + " nao declarado")
                     self.erros.adicionarErroVarNaoDecl(ident)
 
                     #TabelaDeSimbolos.inserir(ident.text, "INVALIDO")
-                    self.tabela[ident.text] = "INVALIDO"
+                    self.tabela_simbolos[ident.text] = "INVALIDO"
                     return "INVALIDO"
             elif ctx.parcela_unario().NUM_INT() != None:
                 
@@ -299,8 +306,9 @@ class AlgumaVisitor(ParseTreeVisitor):
             i += 1
 
         return tipo
-        
 
+
+#region metodos nao usados 4
 
     # Visit a parse tree produced by AlgumaParser#cmdChamada.
     def visitCmdChamada(self, ctx:AlgumaParser.CmdChamadaContext):
@@ -371,18 +379,20 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitParcela(self, ctx:AlgumaParser.ParcelaContext):
         return self.visitChildren(ctx)
 
+#endregion
 
     # Visit a parse tree produced by AlgumaParser#parcela_unario.
     def visitParcela_unario(self, ctx:AlgumaParser.Parcela_unarioContext):
         if ctx.identificador() != None:            
             t = ctx.identificador().IDENT(0).getSymbol()
             #if not TabelaDeSimbolos.existe(t.text):
-            if t.text not in self.tabela:
+            if t.text not in self.tabela_simbolos:
                 #listaErros.adicionarErroSemantico(t,  'identificador ' + t.text + ' nao declarado')
                 self.erros.adicionarErroVarNaoDecl(t)
 
         return self.visitChildren(ctx)
 
+#region metodos nao usados 5
 
     # Visit a parse tree produced by AlgumaParser#parcela_nao_unario.
     def visitParcela_nao_unario(self, ctx:AlgumaParser.Parcela_nao_unarioContext):
@@ -428,6 +438,6 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitOp_logico_2(self, ctx:AlgumaParser.Op_logico_2Context):
         return self.visitChildren(ctx)
 
-
+#endregion
 
 del AlgumaParser

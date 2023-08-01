@@ -1,22 +1,22 @@
-import TabelaDeSimbolos
-from antlr4 import *
-from AlgumaParser import AlgumaParser
+from antlr4 import Token
 
 class listaErros():
-    listaErrosSemanticos = []
 
     def __init__(self):
-        listaErros.listaErrosSemanticos = []
+        self.listaErrosSemanticos = []
 
-    def adicionarErroSemantico(t, mensagem):
-        listaErros.listaErrosSemanticos.append(f'Linha {t.line}: {mensagem}')
+    def adicionarErroSemantico(self, t:Token, mensagem):
+        self.listaErrosSemanticos.append(f'Linha {t.line}: {mensagem}')
 
-    def printarErros():
-        for erro in listaErros.listaErrosSemanticos:
+    def adicionarErroVarNaoDecl(self, t:Token):
+        self.listaErrosSemanticos.append(f'Linha {t.line}: identificador {t.text} nao declarado')
+
+    def printarErros(self):
+        for erro in self.listaErrosSemanticos:
             print(erro)
     
-    def printarArquivo(arquivo):
-        for erro in listaErros.listaErrosSemanticos:
+    def printarArquivo(self, arquivo):
+        for erro in self.listaErrosSemanticos:
             arquivo.write(erro + '\n')
         arquivo.write('Fim da compilacao\n')
         

@@ -14,7 +14,8 @@ class AlgumaVisitor(ParseTreeVisitor):
                         "real" : ["inteiro", "real"],
                         "literal" : ["literal"],
                         "logico" : ["logico", "inteiro", "real"],
-                        "INVALIDO": ["inteiro", "real", "literal", "INVALIDO"]}
+                        "INVALIDO": ["inteiro", "real", "literal", "INVALIDO"],
+                        "registro" : ["registro"]}
 
     # Visit a parse tree produced by AlgumaParser#programa.
     def visitPrograma(self, ctx:AlgumaParser.ProgramaContext, parser):
@@ -45,18 +46,31 @@ class AlgumaVisitor(ParseTreeVisitor):
             
             tipoVar = ctx.tipo().getText()
             if tipoVar[0] == '^':
-                ponteiro = '&'
+                ponteiro = True
+                tipoVar = tipoVar[1:]
+            else:
+                ponteiro = False
 
-            if tipoVar not in self.tiposCompativeis or self.tabela.existe(ident.text) or tabelaTemp.existe(ident.text):
+            if ctx.tipo().registro() is not None:
+                j = 0
+                tipoVar = TabelaDeSimbolos()
+                while ctx.tipo().registro().variavel(j) is not None:
+                    aux = self.visitVariavelAux(ctx.tipo().registro().variavel(j))
+                    if aux != {}:
+                        tipoVar.concatenar(aux)
+                    j += 1
+
+            elif tipoVar not in self.tiposCompativeis or self.tabela.existe(tipoVar) or tabelaTemp.existe(tipoVar):
                 listaErros.adicionarErroSemantico(ident, 'tipo ' + tipoVar + ' nao declarado')
                 tipoVar = "INVALIDO"
-            tabelaTemp.inserir(ident.text, tipoVar)
+                
+            tabelaTemp.inserir(ident.text, [tipoVar, ponteiro])
 
         return tabelaTemp.retornarTabela()
 
     # Visit a parse tree produced by AlgumaParser#declaracao_local.
     def visitDeclaracao_local(self, ctx:AlgumaParser.Declaracao_localContext):
-        ponteiro = ''
+        ponteiro = False
         #print(dir(ctx))
         if ctx.variavel() != None:
             #Caso 1, declaração de uma variavel
@@ -76,17 +90,17 @@ class AlgumaVisitor(ParseTreeVisitor):
                 i = 0
                 while ctx.tipo().registro().variavel(i) != None:
                     aux = self.visitVariavelAux(ctx.tipo().registro().variavel(i))
-                    print()
                     if aux != {}:
-                        keys = list(aux)
-                        for key in keys:
-                            print(aux)
-                            self.tabela.inserir(ident.text + "." + key, aux[key])
+                        dictTemp.concatenar(aux)
                     i += 1
-                self.tabela.inserir(ident.text, "registro")
+
+                self.tabela.inserir(ident.text, [dictTemp, ponteiro])
             else:
+                #constantes
                 tipo = ctx.tipo_basico().getText()
-                self.tabela.inserir(ident.text, tipo)
+                if tipo.startswith('^'):
+                    ponteiro = True
+                self.tabela.inserir(ident.text, [tipo, ponteiro])
 
         return self.visitChildren(ctx)
 
@@ -211,33 +225,47 @@ class AlgumaVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#cmdAtribuicao.
     def visitCmdAtribuicao(self, ctx:AlgumaParser.CmdAtribuicaoContext):
-        #print(dir(ctx))
-        ident = ctx.identificador().IDENT(0).symbol
-        string = ctx.getText()
+        ponteiro = ''
+        if ctx.getText()[0] == '^':
+            ponteiro = '&'
+            ponteiro2 = '^'
+        else:
+            ponteiro2 = ''
+        
+        ident = ctx.identificador().getText()
 
-        
-        
-        if self.tabela.existe(ident.text):
-            #existe e entao, verificar qual tipo
-            tipo = self.tabela.verificar(ident.text)
-            if string[0] == '^':
-                ident.text = '^' + ident.text
-                if tipo[0] == '&':
-                    tipo = tipo[1:]
+        partes = ident.split('.')
+
+        if self.tabela.existe(partes[0]):
+
+
+            tipoVar = self.tabela.verificar(partes[0])
+
+            if isinstance(tipoVar[0], TabelaDeSimbolos):
+                tipoVar = tipoVar[0].verificar(partes[1])
+                    
+            if tipoVar[1] and ponteiro == '&':
+                ponteiro = ''
+            
             #dar um jeito de ver se a expressao só faz operações com o mesmo tipo
             exp_aritimetica_temp = ctx.expressao().termo_logico(0).fator_logico(0)
-            aux = self.verificarTipo(exp_aritimetica_temp, tipo)
-            if aux != tipo:
-                listaErros.adicionarErroSemantico(ident, "atribuicao nao compativel para " + ident.text)
+            aux = self.verificarTipo(exp_aritimetica_temp, ponteiro + tipoVar[0])
+            if aux[0] == '&' and tipoVar[1]:
+                aux = aux[1:]
+
+            if aux != tipoVar[0]:
+                print(ident, ponteiro)
+                listaErros.adicionarErroSemantico(ctx.identificador().IDENT(0).symbol, "atribuicao nao compativel para " + ponteiro2 + ident)
                                 
 
         else:
-            #nao existe, colocar erro
-            listaErros.adicionarErroSemantico(ident, 'identificador ' + ident.text + ' nao declarado')
+            #nao existe esse identificador, colocar erro
+            listaErros(ctx.getToken(), 'identificador ' + partes[0] + ' nao declarado')
 
         
         return self.visitChildren(ctx)
     
+
     def verificarTipo(self, ctx, tipo):
         i = 0
         flag = True
@@ -256,7 +284,7 @@ class AlgumaVisitor(ParseTreeVisitor):
                 else:
                     ident = ctx.parcela_nao_unario().identificador().IDENT(0).symbol
                     if self.tabela.existe(ident.text):
-                        return '&' + self.tabela.verificar(ident.text)
+                        return '&' + self.tabela.verificar(ident.text)[0]
                     else:
                         listaErros.adicionarErroSemantico(ident, "identificador " + ident.text + " nao declarado")
                         self.tabela.inserir(ident.text, "INVALIDO")

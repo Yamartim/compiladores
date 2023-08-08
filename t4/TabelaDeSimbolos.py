@@ -1,23 +1,28 @@
 class TabelaDeSimbolos:
     #Usar strings como tipos: 'INTEIRO', 'REAL' ou 'INVALIDO'
-    Tabela = None
     def __init__(self):
-        TabelaDeSimbolos.Tabela = {}
+        self.Tabela = {}
     
-    def inserir(nome, tipo):
+    def inserir(self, nome, tipo):
         #insere o nome da variavel na tabela
-        TabelaDeSimbolos.Tabela[nome] = tipo
+        self.Tabela[nome] = tipo
 
-    def existe(nome):
+    def existe(self, nome):
         #verifica se o nome já está na tabela
-        if nome in TabelaDeSimbolos.Tabela:
+        if nome in self.Tabela:
             return True
         else:
             return False
         
-    def verificar(nome):
+    def verificar(self, nome):
         #retorna o tipo da variavel
-        if nome in TabelaDeSimbolos.Tabela:
-            return TabelaDeSimbolos.Tabela[nome]
+        if nome in self.Tabela:
+            return self.Tabela[nome]
         else:
             return None
+    
+    def concatenar(self, tabela2):
+        self.Tabela = {**self.Tabela, **tabela2}
+    
+    def retornarTabela(self):
+        return self.Tabela

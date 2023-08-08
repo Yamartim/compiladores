@@ -18,7 +18,7 @@ class AlgumaVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#programa.
     def visitPrograma(self, ctx:AlgumaParser.ProgramaContext, parser):
-        tabela = TabelaDeSimbolos()
+        self.tabela = TabelaDeSimbolos()
         lista = listaErros()
         AlgumaVisitor.parser = parser
         print(ctx.declaracoes())
@@ -34,48 +34,59 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitDecl_local_global(self, ctx:AlgumaParser.Decl_local_globalContext):
         return self.visitChildren(ctx)
 
+    def visitVariavelAux(self, ctx:AlgumaParser.VariavelContext):
+        i = 0
+        tabelaTemp = TabelaDeSimbolos()
+        while ctx.identificador(i) != None:
+            t = ctx.identificador(i)
+                
+            ident = ctx.identificador(i).IDENT(0).getSymbol()
+            i += 1
+            
+            tipoVar = ctx.tipo().getText()
+            if tipoVar[0] == '^':
+                ponteiro = '&'
+
+            if tipoVar not in self.tiposCompativeis or self.tabela.existe(ident.text) or tabelaTemp.existe(ident.text):
+                listaErros.adicionarErroSemantico(ident, 'tipo ' + tipoVar + ' nao declarado')
+                tipoVar = "INVALIDO"
+            tabelaTemp.inserir(ident.text, tipoVar)
+
+        return tabelaTemp.retornarTabela()
 
     # Visit a parse tree produced by AlgumaParser#declaracao_local.
     def visitDeclaracao_local(self, ctx:AlgumaParser.Declaracao_localContext):
         ponteiro = ''
         #print(dir(ctx))
-        if ctx.IDENT() == None:
+        if ctx.variavel() != None:
             #Caso 1, declaração de uma variavel
+            temp = self.visitVariavelAux(ctx.variavel())
+            if temp != {}:
+                self.tabela.concatenar(temp)
             
-            i = 0
-            while ctx.variavel().identificador(i) != None:
-                t = ctx.variavel().identificador(i)
-                
-                ident = ctx.variavel().identificador(i).IDENT(0).getSymbol()
-                i += 1
-                tipoVar = None
-                #print(dir(ctx.variavel().tipo().tipo_estendido()))
-                t = ctx.variavel().tipo().tipo_estendido().getText()
-                if t[0] == '^':
-                    ponteiro = '&'
-                if ctx.variavel().tipo().tipo_estendido().tipo_basico_ident().IDENT() != None:
-                    tipoVar = ctx.variavel().tipo().tipo_estendido().tipo_basico_ident().IDENT()
-                    if tipoVar != None:
-                        tipoVar = tipoVar.getSymbol()
+        elif ctx.tipo() != None:
+            ident = ctx.IDENT().getSymbol()
+            if self.tabela.existe(ident.text):
+                listaErros.adicionarErroSemantico(ident, 'identificador '+ ident.text + ' ja declarado anteriormente')
 
-                        if not TabelaDeSimbolos.existe(tipoVar.text):
-                        
-                            listaErros.adicionarErroSemantico(tipoVar, 'tipo ' + tipoVar.text + ' nao declarado')
-                            tipoVar.text = "INVALIDO"
-                        TabelaDeSimbolos.inserir(ident.text, ponteiro + tipoVar.text)
-                    
-                        #print('++++++',self.parser.RULE_tipo_basico)
-                        #tipoVar = tipoVar.getToken(AlgumaParser.RULE_tipo_basico,0)
-                else:
-                    #só vai cair aqui se o tipo for um dos tipos basicos declarados
-                    tipoVar = ctx.variavel().tipo().tipo_estendido().tipo_basico_ident().tipo_basico()
-
-                    if TabelaDeSimbolos.existe(ident.text):
-                        #printar erro porque a variavel ja foi declarada
-                        listaErros.adicionarErroSemantico(ident, 'identificador '+ ident.text + ' ja declarado anteriormente')
-                    else:
-                        TabelaDeSimbolos.inserir(ident.text, ponteiro + tipoVar.getText())
-                        
+            elif ctx.tipo().registro() != None:
+                #iterar pelos elementos do registro
+                dictTemp = TabelaDeSimbolos()
+                aux = None
+                i = 0
+                while ctx.tipo().registro().variavel(i) != None:
+                    aux = self.visitVariavelAux(ctx.tipo().registro().variavel(i))
+                    print()
+                    if aux != {}:
+                        keys = list(aux)
+                        for key in keys:
+                            print(aux)
+                            self.tabela.inserir(ident.text + "." + key, aux[key])
+                    i += 1
+                self.tabela.inserir(ident.text, "registro")
+            else:
+                tipo = ctx.tipo_basico().getText()
+                self.tabela.inserir(ident.text, tipo)
 
         return self.visitChildren(ctx)
 
@@ -168,7 +179,7 @@ class AlgumaVisitor(ParseTreeVisitor):
         i = 0
         while ctx.identificador(i) != None:
             t = ctx.identificador(i).IDENT(0).getSymbol()
-            if not TabelaDeSimbolos.existe(t.text):
+            if not self.tabela.existe(t.text):
                 listaErros.adicionarErroSemantico(t,  'identificador ' + t.text + ' nao declarado')
             i += 1
         return
@@ -206,9 +217,9 @@ class AlgumaVisitor(ParseTreeVisitor):
 
         
         
-        if TabelaDeSimbolos.existe(ident.text):
+        if self.tabela.existe(ident.text):
             #existe e entao, verificar qual tipo
-            tipo = TabelaDeSimbolos.verificar(ident.text)
+            tipo = self.tabela.verificar(ident.text)
             if string[0] == '^':
                 ident.text = '^' + ident.text
                 if tipo[0] == '&':
@@ -244,11 +255,11 @@ class AlgumaVisitor(ParseTreeVisitor):
                     return 'literal'
                 else:
                     ident = ctx.parcela_nao_unario().identificador().IDENT(0).symbol
-                    if TabelaDeSimbolos.existe(ident.text):
-                        return '&' + TabelaDeSimbolos.verificar(ident.text)
+                    if self.tabela.existe(ident.text):
+                        return '&' + self.tabela.verificar(ident.text)
                     else:
                         listaErros.adicionarErroSemantico(ident, "identificador " + ident.text + " nao declarado")
-                        TabelaDeSimbolos.inserir(ident.text, "INVALIDO")
+                        self.tabela.inserir(ident.text, "INVALIDO")
                         return "INVALIDO"
                 
             elif ctx.parcela_unario().identificador() != None or ctx.parcela_unario().IDENT() != None:
@@ -258,12 +269,12 @@ class AlgumaVisitor(ParseTreeVisitor):
                     ident = ctx.parcela_unario().IDENT(0).symbol
                                     
 
-                if TabelaDeSimbolos.existe(ident.text):
-                    return TabelaDeSimbolos.verificar(ident.text)
+                if self.tabela.existe(ident.text):
+                    return self.tabela.verificar(ident.text)
                 else:
                     #identificador nao existe, adicionar erro
                     listaErros.adicionarErroSemantico(ident, "identificador " + ident.text + " nao declarado")
-                    TabelaDeSimbolos.inserir(ident.text, "INVALIDO")
+                    self.tabela.inserir(ident.text, "INVALIDO")
                     return "INVALIDO"
             elif ctx.parcela_unario().NUM_INT() != None:
                 
@@ -382,7 +393,7 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitParcela_unario(self, ctx:AlgumaParser.Parcela_unarioContext):
         if ctx.identificador() != None:            
             t = ctx.identificador().IDENT(0).getSymbol()
-            if not TabelaDeSimbolos.existe(t.text):
+            if not self.tabela.existe(t.text):
                 listaErros.adicionarErroSemantico(t,  'identificador ' + t.text + ' nao declarado')
         return self.visitChildren(ctx)
 

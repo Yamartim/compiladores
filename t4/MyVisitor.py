@@ -25,6 +25,7 @@ class AlgumaVisitor(ParseTreeVisitor):
         print(ctx.declaracoes())
         return self.visitChildren(ctx)
 
+#region metodos nao usados 1
 
     # Visit a parse tree produced by AlgumaParser#declaracoes.
     def visitDeclaracoes(self, ctx:AlgumaParser.DeclaracoesContext):
@@ -67,6 +68,7 @@ class AlgumaVisitor(ParseTreeVisitor):
             tabelaTemp.inserir(ident.text, [tipoVar, ponteiro])
 
         return tabelaTemp.retornarTabela()
+#endregion
 
     # Visit a parse tree produced by AlgumaParser#declaracao_local.
     def visitDeclaracao_local(self, ctx:AlgumaParser.Declaracao_localContext):
@@ -104,6 +106,7 @@ class AlgumaVisitor(ParseTreeVisitor):
 
         return self.visitChildren(ctx)
 
+#region metodos nao usados 2
 
     # Visit a parse tree produced by AlgumaParser#variavel.
     def visitVariavel(self, ctx:AlgumaParser.VariavelContext):
@@ -174,6 +177,7 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitCmd(self, ctx:AlgumaParser.CmdContext):
         return self.visitChildren(ctx)
 
+#endregion
 
     # Visit a parse tree produced by AlgumaParser#cmdLeia.
     def visitCmdLeia(self, ctx:AlgumaParser.CmdLeiaContext):
@@ -185,8 +189,6 @@ class AlgumaVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#cmdEscreva.
     def visitCmdEscreva(self, ctx:AlgumaParser.CmdEscrevaContext):
-
-
         return self.visitChildren(ctx)
 
     def verificarIdentVariavel(self, ctx):
@@ -197,6 +199,8 @@ class AlgumaVisitor(ParseTreeVisitor):
                 listaErros.adicionarErroSemantico(t,  'identificador ' + t.text + ' nao declarado')
             i += 1
         return
+
+#region metodos nao usados 3
 
     # Visit a parse tree produced by AlgumaParser#cmdSe.
     def visitCmdSe(self, ctx:AlgumaParser.CmdSeContext):
@@ -222,6 +226,7 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitCmdFaca(self, ctx:AlgumaParser.CmdFacaContext):
         return self.visitChildren(ctx)
 
+#endregion
 
     # Visit a parse tree produced by AlgumaParser#cmdAtribuicao.
     def visitCmdAtribuicao(self, ctx:AlgumaParser.CmdAtribuicaoContext):
@@ -345,6 +350,7 @@ class AlgumaVisitor(ParseTreeVisitor):
         return tipo
         
 
+#region metodos nao usados 3
 
     # Visit a parse tree produced by AlgumaParser#cmdChamada.
     def visitCmdChamada(self, ctx:AlgumaParser.CmdChamadaContext):
@@ -416,6 +422,7 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitParcela(self, ctx:AlgumaParser.ParcelaContext):
         return self.visitChildren(ctx)
 
+#endregion
 
     # Visit a parse tree produced by AlgumaParser#parcela_unario.
     def visitParcela_unario(self, ctx:AlgumaParser.Parcela_unarioContext):
@@ -425,6 +432,7 @@ class AlgumaVisitor(ParseTreeVisitor):
                 listaErros.adicionarErroSemantico(t,  'identificador ' + t.text + ' nao declarado')
         return self.visitChildren(ctx)
 
+#region metodos nao usados 4
 
     # Visit a parse tree produced by AlgumaParser#parcela_nao_unario.
     def visitParcela_nao_unario(self, ctx:AlgumaParser.Parcela_nao_unarioContext):
@@ -470,6 +478,6 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitOp_logico_2(self, ctx:AlgumaParser.Op_logico_2Context):
         return self.visitChildren(ctx)
 
-
+#endregion
 
 del AlgumaParser

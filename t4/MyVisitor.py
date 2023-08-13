@@ -44,7 +44,9 @@ class AlgumaVisitor(ParseTreeVisitor):
                 
             ident = ctx.identificador(i).IDENT(0).getSymbol()
             i += 1
-            
+            if self.tabela.existe(ident.text):
+                listaErros.adicionarErroSemantico(ident, 'identificador '+ ident.text + ' ja declarado anteriormente')
+                continue
             tipoVar = ctx.tipo().getText()
             if tipoVar[0] == '^':
                 ponteiro = True
@@ -61,7 +63,7 @@ class AlgumaVisitor(ParseTreeVisitor):
                         tipoVar.concatenar(aux)
                     j += 1
 
-            elif tipoVar not in self.tiposCompativeis or self.tabela.existe(tipoVar) or tabelaTemp.existe(tipoVar):
+            elif tipoVar not in self.tiposCompativeis and not self.tabela.existe(tipoVar) and not tabelaTemp.existe(tipoVar):
                 listaErros.adicionarErroSemantico(ident, 'tipo ' + tipoVar + ' nao declarado')
                 tipoVar = "INVALIDO"
                 
@@ -195,8 +197,23 @@ class AlgumaVisitor(ParseTreeVisitor):
         i = 0
         while ctx.identificador(i) != None:
             t = ctx.identificador(i).IDENT(0).getSymbol()
+            text = ctx.identificador(i).getText()
             if not self.tabela.existe(t.text):
-                listaErros.adicionarErroSemantico(t,  'identificador ' + t.text + ' nao declarado')
+                #se o primeiro IDENT não existir, adicione erro
+                listaErros.adicionarErroSemantico(t,  'identificador ' + text + ' nao declarado')
+            else:
+                var = self.tabela.verificar(t.text)
+                print('var eh ', var[0])
+                if ctx.identificador(i).IDENT(1) != None:
+                    ident1 = ctx.identificador(i).IDENT(1).getText()
+                    var = self.tabela.verificar(var[0])[0]
+                    if type(var) is TabelaDeSimbolos and not var.existe(ident1):
+                        #este if verifica 3 coisas, 
+                        #1 se o identificador está acessando algo com mais de 1 IDENT
+                        #2 se o tipo retornado é um registro, neste caso, uma outra TabelaDeSimbolos (registros são armazenados assim)
+                        #3 se o tipo acessado dentro do registro não existe
+                        #caso tudo isso seja verdade, então deve-se adicionar o erro
+                        listaErros.adicionarErroSemantico(t,  'identificador ' + text + ' nao declarado')
             i += 1
         return
 
@@ -243,17 +260,26 @@ class AlgumaVisitor(ParseTreeVisitor):
 
         if self.tabela.existe(partes[0]):
 
-
+            print('partes[0] = ', partes[0])
+            if len(partes) > 1:
+                print('partes[1] = ', partes[1])
             tipoVar = self.tabela.verificar(partes[0])
-
-            if isinstance(tipoVar[0], TabelaDeSimbolos):
-                tipoVar = tipoVar[0].verificar(partes[1])
+            print('tipoVar = ', tipoVar)
+            #print(self.tabela.Tabela['tVinho'][0].Tabela)
+            if tipoVar[0] not in AlgumaVisitor.tiposCompativeis and type(self.tabela.verificar(tipoVar[0])[0]) is TabelaDeSimbolos and len(partes) > 1:
+                print('salve')
+                tipoVar = self.tabela.verificar(tipoVar[0])
+                if len(partes) > 1:
+                    tipoVar = tipoVar[0].verificar(partes[1])
+                print('novo tipoVar = ', tipoVar)
+                
                     
             if tipoVar[1] and ponteiro == '&':
                 ponteiro = ''
             
             #dar um jeito de ver se a expressao só faz operações com o mesmo tipo
             exp_aritimetica_temp = ctx.expressao().termo_logico(0).fator_logico(0)
+            print('linha : ', ctx.identificador().IDENT(0).symbol.line)
             aux = self.verificarTipo(exp_aritimetica_temp, ponteiro + tipoVar[0])
             if aux[0] == '&' and tipoVar[1]:
                 aux = aux[1:]
@@ -303,7 +329,7 @@ class AlgumaVisitor(ParseTreeVisitor):
                                     
 
                 if self.tabela.existe(ident.text):
-                    return self.tabela.verificar(ident.text)
+                    return self.tabela.verificar(ident.text)[0]
                 else:
                     #identificador nao existe, adicionar erro
                     listaErros.adicionarErroSemantico(ident, "identificador " + ident.text + " nao declarado")
@@ -332,19 +358,27 @@ class AlgumaVisitor(ParseTreeVisitor):
             children = ctx.parcela
         
 
-        if not flag:
+        if not flag: #flag para verificar o tipo de chamamendo de children
             aux = self.verificarTipo(children(), tipo)
             if aux == None or aux == []:
                 flag = False
-            elif aux != tipo and aux not in AlgumaVisitor.tiposCompativeis[tipo]:
+            elif aux != tipo and aux not in AlgumaVisitor.tiposCompativeis:
                 return aux
+            elif aux in AlgumaVisitor.tiposCompativeis: #significa que o tipo é um dos tipos básicos,
+                                                        #deve-se analisar a compatibilidade
+                if aux not in AlgumaVisitor.tiposCompativeis[tipo]: #verificar se o tipo não aceita aux
+                    return aux #se não aceitar, retorne aux (todas as chamadas anteriores retornarão aux)
         else:
             while flag:
                 aux = self.verificarTipo(children(i), tipo)
+                print('aux eh ', aux)
                 if aux == None or aux == []:
                     flag = False
-                elif aux != tipo and aux not in AlgumaVisitor.tiposCompativeis[tipo]:
+                elif aux != tipo and aux not in AlgumaVisitor.tiposCompativeis:
                     return aux
+                elif aux in AlgumaVisitor.tiposCompativeis: #mesma explicação acima
+                    if aux not in AlgumaVisitor.tiposCompativeis[tipo]: #verificar se o tipo não aceita aux
+                        return aux #se não aceitar, retorne aux (todas as chamadas anteriores retornarão aux)
                 i += 1
 
         return tipo
@@ -428,8 +462,10 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitParcela_unario(self, ctx:AlgumaParser.Parcela_unarioContext):
         if ctx.identificador() != None:            
             t = ctx.identificador().IDENT(0).getSymbol()
+            text = ctx.identificador().getText()
             if not self.tabela.existe(t.text):
-                listaErros.adicionarErroSemantico(t,  'identificador ' + t.text + ' nao declarado')
+                if ctx.identificador().IDENT(1) == None or not self.tabela.existe(ctx.identificador().IDENT(1).getText()):
+                    listaErros.adicionarErroSemantico(t,  'identificador ' + text + ' nao declarado')
         return self.visitChildren(ctx)
 
 #region metodos nao usados 4

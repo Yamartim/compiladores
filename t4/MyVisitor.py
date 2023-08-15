@@ -206,7 +206,10 @@ class AlgumaVisitor(ParseTreeVisitor):
                 print('var eh ', var[0])
                 if ctx.identificador(i).IDENT(1) != None:
                     ident1 = ctx.identificador(i).IDENT(1).getText()
-                    var = self.tabela.verificar(var[0])[0]
+                    var = var[0]
+                    if type(var) is str and var not in AlgumaVisitor.tiposCompativeis:
+                        var = self.tabela.verificar(var)
+                        var = var[0]
                     if type(var) is TabelaDeSimbolos and not var.existe(ident1):
                         #este if verifica 3 coisas, 
                         #1 se o identificador está acessando algo com mais de 1 IDENT
@@ -260,19 +263,19 @@ class AlgumaVisitor(ParseTreeVisitor):
 
         if self.tabela.existe(partes[0]):
 
-            print('partes[0] = ', partes[0])
-            if len(partes) > 1:
-                print('partes[1] = ', partes[1])
             tipoVar = self.tabela.verificar(partes[0])
-            print('tipoVar = ', tipoVar)
-            #print(self.tabela.Tabela['tVinho'][0].Tabela)
-            if tipoVar[0] not in AlgumaVisitor.tiposCompativeis and type(self.tabela.verificar(tipoVar[0])[0]) is TabelaDeSimbolos and len(partes) > 1:
-                print('salve')
-                tipoVar = self.tabela.verificar(tipoVar[0])
-                if len(partes) > 1:
-                    tipoVar = tipoVar[0].verificar(partes[1])
-                print('novo tipoVar = ', tipoVar)
+            if len(partes) > 1:
+                print('é um tipo diferente')
+                if type(tipoVar[0]) is not TabelaDeSimbolos: #caso seja um tipo declarado anteriormente,
+                                                             #recupere-o
+                    tipoVar = self.tabela.verificar(tipoVar[0])
                 
+                tipoVar = tipoVar[0].verificar(partes[1]) #acesse a segunda parte do identificador
+                
+            if tipoVar == None:
+                #retornou None nas verificações acima, tipo não declarado
+                listaErros(ctx.getToken(), 'identificador ' + ident + ' nao declarado')
+                return self.visitChildren(ctx)
                     
             if tipoVar[1] and ponteiro == '&':
                 ponteiro = ''
@@ -291,7 +294,7 @@ class AlgumaVisitor(ParseTreeVisitor):
 
         else:
             #nao existe esse identificador, colocar erro
-            listaErros(ctx.getToken(), 'identificador ' + partes[0] + ' nao declarado')
+            listaErros(ctx.getToken(), 'identificador ' + ident + ' nao declarado')
 
         
         return self.visitChildren(ctx)
@@ -362,7 +365,7 @@ class AlgumaVisitor(ParseTreeVisitor):
             aux = self.verificarTipo(children(), tipo)
             if aux == None or aux == []:
                 flag = False
-            elif aux != tipo and aux not in AlgumaVisitor.tiposCompativeis:
+            elif aux != tipo and tipo not in AlgumaVisitor.tiposCompativeis:
                 return aux
             elif aux in AlgumaVisitor.tiposCompativeis: #significa que o tipo é um dos tipos básicos,
                                                         #deve-se analisar a compatibilidade
@@ -374,7 +377,7 @@ class AlgumaVisitor(ParseTreeVisitor):
                 print('aux eh ', aux)
                 if aux == None or aux == []:
                     flag = False
-                elif aux != tipo and aux not in AlgumaVisitor.tiposCompativeis:
+                elif aux != tipo and tipo not in AlgumaVisitor.tiposCompativeis:
                     return aux
                 elif aux in AlgumaVisitor.tiposCompativeis: #mesma explicação acima
                     if aux not in AlgumaVisitor.tiposCompativeis[tipo]: #verificar se o tipo não aceita aux
@@ -463,9 +466,26 @@ class AlgumaVisitor(ParseTreeVisitor):
         if ctx.identificador() != None:            
             t = ctx.identificador().IDENT(0).getSymbol()
             text = ctx.identificador().getText()
-            if not self.tabela.existe(t.text):
-                if ctx.identificador().IDENT(1) == None or not self.tabela.existe(ctx.identificador().IDENT(1).getText()):
+            partes = text.split('.')
+            if not self.tabela.existe(partes[0]):
+                listaErros.adicionarErroSemantico(t,  'identificador ' + text + ' nao declarado')
+            tipo = self.tabela.verificar(partes[0])
+
+            if tipo == None:
+                listaErros.adicionarErroSemantico(t,  'identificador ' + text + ' nao declarado')
+            elif len(partes) > 1:
+                if type(tipo[0]) is not TabelaDeSimbolos: #caso seja um tipo registro declarado anteriormente,
+                                                          #recupere-o
+                    tipo = self.tabela.verificar(tipo[0])
+
+                if type(tipo[0]) is TabelaDeSimbolos:
+                    tipo = tipo[0].verificar(partes[1]) #acesse a segunda parte do identificador
+                print('texto eh ', text)
+                print('linha : ', t.line, ' retornou ', tipo)
+                
+                if tipo is None: #quer dizer que alguma verificação acima retornou Falso
                     listaErros.adicionarErroSemantico(t,  'identificador ' + text + ' nao declarado')
+                
         return self.visitChildren(ctx)
 
 #region metodos nao usados 4

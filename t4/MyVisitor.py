@@ -16,10 +16,15 @@ class AlgumaVisitor(ParseTreeVisitor):
                         "logico" : ["logico", "inteiro", "real"],
                         "INVALIDO": ["inteiro", "real", "literal", "INVALIDO"],
                         "registro" : ["registro"]}
+    
+    def construtor(self, tabelaCriada):
+        self.tabela = TabelaDeSimbolos()
+        self.tabela.concatenar(tabelaCriada.Tabela)
 
     # Visit a parse tree produced by AlgumaParser#programa.
     def visitPrograma(self, ctx:AlgumaParser.ProgramaContext, parser):
         self.tabela = TabelaDeSimbolos()
+        self.funcoes = TabelaDeSimbolos()
         lista = listaErros()
         AlgumaVisitor.parser = parser
         print(ctx.declaracoes())
@@ -157,7 +162,49 @@ class AlgumaVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#declaracao_global.
     def visitDeclaracao_global(self, ctx:AlgumaParser.Declaracao_globalContext):
-        return self.visitChildren(ctx)
+        ident = ctx.IDENT().symbol
+        if self.tabela.existe(ident.text):
+            #adicionar erro porque esse identificador já está em uso
+            listaErros.adicionarErroSemantico(ident, 'identificador '+ ident.text + ' ja declarado anteriormente')
+
+        else:
+            if ctx.parametros() != None:
+                i = 0
+                t = TabelaDeSimbolos()
+                while ctx.parametros().parametro(i)!= None:
+                    tipo = ctx.parametros().parametro(i).tipo_estendido().getText()
+                    j = 0
+                    while ctx.parametros().parametro(i).identificador(j) != None:
+                        t.inserir(ctx.parametros().parametro(i).identificador(j).getText(), tipo)
+                        j += 1
+                    i += 1
+                aux = AlgumaVisitor()
+                aux.construtor(t)
+
+            i = 0
+            while ctx.declaracao_local(i) != None:
+                aux.visitDeclaracao_local(ctx.declaracao_local(i))
+                i += 1
+
+            i = 0
+            while ctx.cmd(i) != None:
+                aux.visitCmd(ctx.cmd(i))
+                i += 1
+            
+            #adicionar a função/procedimento na tabela de simbolos
+            if ctx.tipo_estendido() != None:
+                tipo = ctx.tipo_estendido().getText()
+                tipoVerificar = tipo
+                if tipo[0] == '^':
+                    tipoVerificar = tipo[1:]
+                if tipoVerificar in self.tiposCompativeis or self.tabela.existe(tipoVerificar):
+                    self.funcoes.inserir(ident.text, [t ,tipo])
+                else:
+                    #adicionar erro pois tipo não existe
+                    listaErros.adicionarErroSemantico(ident, 'tipo ' + tipo + ' nao declarado')
+            else:
+                self.funcoes.inserir(ident.text, [t, None])
+        #return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by AlgumaParser#parametro.
@@ -203,7 +250,6 @@ class AlgumaVisitor(ParseTreeVisitor):
                 listaErros.adicionarErroSemantico(t,  'identificador ' + text + ' nao declarado')
             else:
                 var = self.tabela.verificar(t.text)
-                print('var eh ', var[0])
                 if ctx.identificador(i).IDENT(1) != None:
                     ident1 = ctx.identificador(i).IDENT(1).getText()
                     var = var[0]
@@ -284,17 +330,20 @@ class AlgumaVisitor(ParseTreeVisitor):
             exp_aritimetica_temp = ctx.expressao().termo_logico(0).fator_logico(0)
             print('linha : ', ctx.identificador().IDENT(0).symbol.line)
             aux = self.verificarTipo(exp_aritimetica_temp, ponteiro + tipoVar[0])
+            print('linha : ', ctx.identificador().IDENT(0).symbol.line)
             if aux[0] == '&' and tipoVar[1]:
                 aux = aux[1:]
 
-            if aux != tipoVar[0]:
+            if aux != tipoVar[0] and not (tipoVar[0] in self.tiposCompativeis and aux in self.tiposCompativeis[tipoVar[0]]):
                 print(ident, ponteiro)
                 listaErros.adicionarErroSemantico(ctx.identificador().IDENT(0).symbol, "atribuicao nao compativel para " + ponteiro2 + ident)
                                 
 
         else:
             #nao existe esse identificador, colocar erro
-            listaErros(ctx.getToken(), 'identificador ' + ident + ' nao declarado')
+            token = ctx.identificador().IDENT(0).getSymbol()
+            mensagem = 'identificador ' + ident + ' nao declarado'
+            listaErros.adicionarErroSemantico(token, mensagem)
 
         
         return self.visitChildren(ctx)
@@ -303,7 +352,7 @@ class AlgumaVisitor(ParseTreeVisitor):
     def verificarTipo(self, ctx, tipo):
         i = 0
         flag = True
-        ret = None
+        conversao = False
         ctx_type = type(ctx)
         children = None
 
@@ -328,11 +377,14 @@ class AlgumaVisitor(ParseTreeVisitor):
                 if ctx.parcela_unario().identificador() != None:
                     ident = ctx.parcela_unario().identificador().IDENT(0).symbol
                 else:
-                    ident = ctx.parcela_unario().IDENT(0).symbol
+                    ident = ctx.parcela_unario().IDENT().symbol
+                
                                     
 
                 if self.tabela.existe(ident.text):
                     return self.tabela.verificar(ident.text)[0]
+                elif self.funcoes.existe(ident.text):
+                    return self.funcoes.verificar(ident.text)[1]
                 else:
                     #identificador nao existe, adicionar erro
                     listaErros.adicionarErroSemantico(ident, "identificador " + ident.text + " nao declarado")
@@ -345,7 +397,19 @@ class AlgumaVisitor(ParseTreeVisitor):
                 
                 return "real"
             
-        if ctx_type is self.parser.Fator_logicoContext:
+        if ctx_type is self.parser.ExpressaoContext:
+            children = ctx.termo_logico
+            if ctx.op_logico_1(0) != None:
+                conversao = True
+                print('ctx : ', ctx.getText())
+                print('op:', ctx.op_logico_1(0).getText())
+        elif ctx_type is self.parser.Termo_logicoContext:
+            children = ctx.fator_logico
+            if ctx.op_logico_2(0) != None:
+                conversao = True
+                print('ctx : ', ctx.getText())
+                print('op:', ctx.op_logico_2(0).getText())
+        elif ctx_type is self.parser.Fator_logicoContext:
             children = ctx.parcela_logica
             flag = False
         elif ctx_type is self.parser.Parcela_logicaContext:
@@ -353,6 +417,10 @@ class AlgumaVisitor(ParseTreeVisitor):
             flag = False
         elif ctx_type is self.parser.Exp_relacionalContext:
             children = ctx.exp_aritmetica
+            if ctx.op_relacional() != None:
+                conversao = True
+                print('ctx : ', ctx.getText())
+                print('op:', ctx.op_relacional().getText())
         elif ctx_type is self.parser.Exp_aritmeticaContext:
             children = ctx.termo
         elif ctx_type is self.parser.TermoContext:
@@ -371,12 +439,13 @@ class AlgumaVisitor(ParseTreeVisitor):
                                                         #deve-se analisar a compatibilidade
                 if aux not in AlgumaVisitor.tiposCompativeis[tipo]: #verificar se o tipo não aceita aux
                     return aux #se não aceitar, retorne aux (todas as chamadas anteriores retornarão aux)
+            aux2 = aux
         else:
             while flag:
                 aux = self.verificarTipo(children(i), tipo)
-                print('aux eh ', aux)
                 if aux == None or aux == []:
                     flag = False
+                    aux2 = self.verificarTipo(children(i-1), tipo)
                 elif aux != tipo and tipo not in AlgumaVisitor.tiposCompativeis:
                     return aux
                 elif aux in AlgumaVisitor.tiposCompativeis: #mesma explicação acima
@@ -384,20 +453,52 @@ class AlgumaVisitor(ParseTreeVisitor):
                         return aux #se não aceitar, retorne aux (todas as chamadas anteriores retornarão aux)
                 i += 1
 
-        return tipo
+        #se chegou aqui, então os filhos são compatíveis aos tipos passados
+        #caso alguns dos operadores relacionais ou logicos forem utilizados
+        #converter o tipo para logico
+        if conversao:
+            return 'logico'
+
+        return aux2
         
 
 #region metodos nao usados 3
 
     # Visit a parse tree produced by AlgumaParser#cmdChamada.
     def visitCmdChamada(self, ctx:AlgumaParser.CmdChamadaContext):
+        ident = ctx.IDENT().symbol
+        if not self.funcoes.existe(ident.text):
+            listaErros.adicionarErroSemantico(ident, "procedimento " + ident.text + "não declarado")
+        else:
+            #implementações serão feitas posteriormente, por enquanto, só verificaremos por erros
+            lista = self.funcoes.verificar(ident.text)
+            tabela = lista[0]
+            itens = list(tabela.Tabela)
+    
+
+            for i in range(0,len(tabela.Tabela)):
+                expr = ctx.expressao(i)
+                tipoParam = tabela.verificar(itens[i])
+                if expr == None:
+                    listaErros.adicionarErroSemantico(ident, 'incompatibilidade de parametros na chamada de ' + ident.text)
+                    break
+                else:
+                    expr = ctx.expressao(i)
+                    aux = self.verificarTipo(expr, tipoParam)
+                    if aux == None or aux != tipoParam:
+                        #se os tipos forem diferentes, adicione erro
+                        listaErros.adicionarErroSemantico(ident, 'incompatibilidade de parametros na chamada de ' + ident.text)
+                        break
+
+            
         return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by AlgumaParser#cmdRetorne.
     def visitCmdRetorne(self, ctx:AlgumaParser.CmdRetorneContext):
-        print(TabelaDeSimbolos.Tabela)
-        return self.visitChildren(ctx)
+        exp_aritimetica_temp = ctx.expressao().termo_logico(0).fator_logico(0)            
+        aux = self.verificarTipo(exp_aritimetica_temp, 'inteiro')
+        return aux
 
 
     # Visit a parse tree produced by AlgumaParser#selecao.
@@ -485,6 +586,9 @@ class AlgumaVisitor(ParseTreeVisitor):
                 
                 if tipo is None: #quer dizer que alguma verificação acima retornou Falso
                     listaErros.adicionarErroSemantico(t,  'identificador ' + text + ' nao declarado')
+        elif ctx.IDENT() != None:
+            #entao é uma chamada, passar contexto para ela
+            self.visitCmdChamada(ctx)
                 
         return self.visitChildren(ctx)
 

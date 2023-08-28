@@ -144,12 +144,14 @@ class AlgumaVisitor(ParseTreeVisitor):
                     i += 1
 
                 self.tabela.inserir(ident.text, [dictTemp, ponteiro])
-            else:
-                #constantes
-                tipo = ctx.tipo_basico().getText()
-                if tipo.startswith('^'):
-                    ponteiro = True
-                self.tabela.inserir(ident.text, [tipo, ponteiro])
+        else:
+            #constantes
+            ident = ctx.IDENT().getSymbol()
+            tipo = ctx.tipo_basico().getText()
+            if tipo.startswith('^'):
+                ponteiro = True
+            self.tabela.inserir(ident.text, [tipo, ponteiro])
+            print('inserido : ', ident.text, ' tipo : ', tipo)
 
         return self.visitChildren(ctx)
 
@@ -211,15 +213,19 @@ class AlgumaVisitor(ParseTreeVisitor):
             if ctx.parametros() != None:
                 i = 0
                 t = TabelaDeSimbolos()
+                #t.concatenar(self.tabela.Tabela)
                 while ctx.parametros().parametro(i)!= None:
                     tipo = ctx.parametros().parametro(i).tipo_estendido().getText()
                     j = 0
                     while ctx.parametros().parametro(i).identificador(j) != None:
-                        t.inserir(ctx.parametros().parametro(i).identificador(j).getText(), tipo)
+                        t.inserir(ctx.parametros().parametro(i).identificador(j).getText(), [tipo, False])
                         j += 1
                     i += 1
                 aux = AlgumaVisitor()
-                aux.construtor(t)
+                tParam = t
+                tParam.concatenar(self.tabela.Tabela)
+                aux.construtor(tParam)
+
 
             i = 0
             while ctx.declaracao_local(i) != None:
@@ -294,8 +300,9 @@ class AlgumaVisitor(ParseTreeVisitor):
                     ident1 = ctx.identificador(i).IDENT(1).getText()
                     var = var[0]
                     if type(var) is str and var not in AlgumaVisitor.tiposCompativeis:
-                        var = self.tabela.verificar(var)
-                        var = var[0]
+                        if self.tabela.existe(var):
+                            var = self.tabela.verificar(var)
+                            var = var[0]
                     if type(var) is TabelaDeSimbolos and not var.existe(ident1):
                         #este if verifica 3 coisas, 
                         #1 se o identificador está acessando algo com mais de 1 IDENT
@@ -345,7 +352,8 @@ class AlgumaVisitor(ParseTreeVisitor):
         
         ident = ctx.identificador().getText()
         partes, dimensao = self.separaIdentDimensao(ctx.identificador())
-
+        print('TABELA DE SIMBOLOS')
+        print(self.tabela.Tabela)
 
         #partes = ident.split('.')
 
@@ -515,11 +523,16 @@ class AlgumaVisitor(ParseTreeVisitor):
         if not self.funcoes.existe(ident.text):
             listaErros.adicionarErroSemantico(ident, "procedimento " + ident.text + "não declarado")
         else:
-            #implementações serão feitas posteriormente, por enquanto, só verificaremos por erros
+            #por enquanto, só verificaremos por erros
             lista = self.funcoes.verificar(ident.text)
             tabela = lista[0]
             itens = list(tabela.Tabela)
-    
+            '''
+            print('---------------------------------------')
+            print('1. ', ident.text)
+            print(tabela.Tabela)
+            print('---------------------------------------')
+            '''    
 
             for i in range(0,len(tabela.Tabela)):
                 expr = ctx.expressao(i)
@@ -529,8 +542,10 @@ class AlgumaVisitor(ParseTreeVisitor):
                     break
                 else:
                     expr = ctx.expressao(i)
-                    aux = self.verificarTipo(expr, tipoParam)
-                    if aux == None or aux != tipoParam:
+                    aux = self.verificarTipo(expr, tipoParam[0])
+                    if aux == None or aux != tipoParam[0]:
+                        print('expr : ', expr.getText())
+                        print('param : ', tipoParam[0], ' aux : ', aux)
                         #se os tipos forem diferentes, adicione erro
                         listaErros.adicionarErroSemantico(ident, 'incompatibilidade de parametros na chamada de ' + ident.text)
                         break
@@ -621,6 +636,9 @@ class AlgumaVisitor(ParseTreeVisitor):
             if tipo == None:
                 listaErros.adicionarErroSemantico(t,  'identificador ' + text + ' nao declarado')
             elif len(partes) > 1:
+                print('partes : ', partes)
+                print('tipo : ', tipo)
+                print(self.tabela.Tabela)
                 if type(tipo[0]) is not TabelaDeSimbolos: #caso seja um tipo registro declarado anteriormente,
                                                           #recupere-o
                     tipo = self.tabela.verificar(tipo[0])

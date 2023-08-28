@@ -21,6 +21,30 @@ class AlgumaVisitor(ParseTreeVisitor):
         self.tabela = TabelaDeSimbolos()
         self.tabela.concatenar(tabelaCriada.Tabela)
 
+    def separaIdentDimensao(self, ctx:AlgumaParser.IdentificadorContext):
+        listaIDENT = []
+        listaDimensao = []
+
+        if type(ctx) is str:
+            temp = ctx.split('[', 1)
+            listaIDENT = temp[0]
+            if len(temp) > 1:
+                temp[1].replace(']', '')
+                listaDimensao = temp[1].split('[')
+        else:
+                
+            i=0
+            while ctx.IDENT(i) != None:
+                listaIDENT.append(ctx.IDENT(i).getText())
+                i += 1
+            
+            i = 0
+            while ctx.dimensao().exp_aritmetica(i) != None:
+                listaDimensao.append(ctx.dimensao().exp_aritmetica(i))
+                i += 1
+
+        return listaIDENT, listaDimensao
+ 
     # Visit a parse tree produced by AlgumaParser#programa.
     def visitPrograma(self, ctx:AlgumaParser.ProgramaContext, parser):
         self.tabela = TabelaDeSimbolos()
@@ -52,12 +76,15 @@ class AlgumaVisitor(ParseTreeVisitor):
             if self.tabela.existe(ident.text):
                 listaErros.adicionarErroSemantico(ident, 'identificador '+ ident.text + ' ja declarado anteriormente')
                 continue
+            _, dimensao = self.separaIdentDimensao(t)
             tipoVar = ctx.tipo().getText()
-            if tipoVar[0] == '^':
+            if tipoVar[0] == '^' :
                 ponteiro = True
                 tipoVar = tipoVar[1:]
             else:
                 ponteiro = False
+            
+            
 
             if ctx.tipo().registro() is not None:
                 j = 0
@@ -71,6 +98,19 @@ class AlgumaVisitor(ParseTreeVisitor):
             elif tipoVar not in self.tiposCompativeis and not self.tabela.existe(tipoVar) and not tabelaTemp.existe(tipoVar):
                 listaErros.adicionarErroSemantico(ident, 'tipo ' + tipoVar + ' nao declarado')
                 tipoVar = "INVALIDO"
+
+            else:
+                for parte in dimensao:
+                    #cada parte é uma expressao aritmetica, como definem o tamanho de um vetor
+                    #devem ser inteiros
+                    aux = self.verificarTipo(parte, "inteiro")
+                    if aux != "inteiro":
+                        #colocar erro porque exp nao inteiras estao sendo utilizadas em dimensoes
+                        #sem implementação porque nao há caso de teste para isto
+                        pass
+                    else:
+                        print('tipoVar : ', tipoVar)
+                        ponteiro = True
                 
             tabelaTemp.inserir(ident.text, [tipoVar, ponteiro])
 
@@ -304,8 +344,10 @@ class AlgumaVisitor(ParseTreeVisitor):
             ponteiro2 = ''
         
         ident = ctx.identificador().getText()
+        partes, dimensao = self.separaIdentDimensao(ctx.identificador())
 
-        partes = ident.split('.')
+
+        #partes = ident.split('.')
 
         if self.tabela.existe(partes[0]):
 
@@ -323,19 +365,22 @@ class AlgumaVisitor(ParseTreeVisitor):
                 listaErros(ctx.getToken(), 'identificador ' + ident + ' nao declarado')
                 return self.visitChildren(ctx)
                     
-            if tipoVar[1] and ponteiro == '&':
+            if tipoVar[1] and (ponteiro == '&' or len(dimensao) > 0):
                 ponteiro = ''
+            
             
             #dar um jeito de ver se a expressao só faz operações com o mesmo tipo
             exp_aritimetica_temp = ctx.expressao().termo_logico(0).fator_logico(0)
             print('linha : ', ctx.identificador().IDENT(0).symbol.line)
+            print('tipoVar : ', tipoVar)
             aux = self.verificarTipo(exp_aritimetica_temp, ponteiro + tipoVar[0])
             print('linha : ', ctx.identificador().IDENT(0).symbol.line)
             if aux[0] == '&' and tipoVar[1]:
                 aux = aux[1:]
 
             if aux != tipoVar[0] and not (tipoVar[0] in self.tiposCompativeis and aux in self.tiposCompativeis[tipoVar[0]]):
-                print(ident, ponteiro)
+                print(ident, aux, tipoVar[0])
+                print('salve')
                 listaErros.adicionarErroSemantico(ctx.identificador().IDENT(0).symbol, "atribuicao nao compativel para " + ponteiro2 + ident)
                                 
 
@@ -567,7 +612,8 @@ class AlgumaVisitor(ParseTreeVisitor):
         if ctx.identificador() != None:            
             t = ctx.identificador().IDENT(0).getSymbol()
             text = ctx.identificador().getText()
-            partes = text.split('.')
+            
+            partes, dimensao = self.separaIdentDimensao(ctx.identificador())
             if not self.tabela.existe(partes[0]):
                 listaErros.adicionarErroSemantico(t,  'identificador ' + text + ' nao declarado')
             tipo = self.tabela.verificar(partes[0])

@@ -51,7 +51,6 @@ class AlgumaVisitor(ParseTreeVisitor):
         self.funcoes = TabelaDeSimbolos()
         lista = listaErros()
         AlgumaVisitor.parser = parser
-        print(ctx.declaracoes())
         return self.visitChildren(ctx)
 
 #region metodos nao usados 1
@@ -109,7 +108,6 @@ class AlgumaVisitor(ParseTreeVisitor):
                         #sem implementação porque nao há caso de teste para isto
                         pass
                     else:
-                        print('tipoVar : ', tipoVar)
                         ponteiro = True
                 
             tabelaTemp.inserir(ident.text, [tipoVar, ponteiro])
@@ -151,7 +149,6 @@ class AlgumaVisitor(ParseTreeVisitor):
             if tipo.startswith('^'):
                 ponteiro = True
             self.tabela.inserir(ident.text, [tipo, ponteiro])
-            print('inserido : ', ident.text, ' tipo : ', tipo)
 
         return self.visitChildren(ctx)
 
@@ -205,6 +202,7 @@ class AlgumaVisitor(ParseTreeVisitor):
     # Visit a parse tree produced by AlgumaParser#declaracao_global.
     def visitDeclaracao_global(self, ctx:AlgumaParser.Declaracao_globalContext):
         ident = ctx.IDENT().symbol
+        tipo = None
         if self.tabela.existe(ident.text):
             #adicionar erro porque esse identificador já está em uso
             listaErros.adicionarErroSemantico(ident, 'identificador '+ ident.text + ' ja declarado anteriormente')
@@ -222,21 +220,17 @@ class AlgumaVisitor(ParseTreeVisitor):
                         j += 1
                     i += 1
                 aux = AlgumaVisitor()
-                tParam = t
+                tParam = TabelaDeSimbolos()
+                tParam.concatenar(t.Tabela)
                 tParam.concatenar(self.tabela.Tabela)
                 aux.construtor(tParam)
+                '''
+                print('**************************************************')
+                print('definição da funcao ', ident.text)
+                print(t.Tabela)
+                print('**************************************************')
+                '''
 
-
-            i = 0
-            while ctx.declaracao_local(i) != None:
-                aux.visitDeclaracao_local(ctx.declaracao_local(i))
-                i += 1
-
-            i = 0
-            while ctx.cmd(i) != None:
-                aux.visitCmd(ctx.cmd(i))
-                i += 1
-            
             #adicionar a função/procedimento na tabela de simbolos
             if ctx.tipo_estendido() != None:
                 tipo = ctx.tipo_estendido().getText()
@@ -250,6 +244,31 @@ class AlgumaVisitor(ParseTreeVisitor):
                     listaErros.adicionarErroSemantico(ident, 'tipo ' + tipo + ' nao declarado')
             else:
                 self.funcoes.inserir(ident.text, [t, None])
+
+            i = 0
+            while ctx.declaracao_local(i) != None:
+                aux.visitDeclaracao_local(ctx.declaracao_local(i))
+                i += 1
+
+            i = 0
+            while ctx.cmd(i) != None:
+                aux.visitCmd(ctx.cmd(i))
+                if ctx.cmd(i).cmdRetorne() != None:
+                    if tipo == None:
+                        listaErros.adicionarErroSemantico(ctx.cmd(i).cmdRetorne().getToken() ,'comando retorne nao permitido nesse escopo')
+                    else:
+                        print('tipo : ', tipo)
+                        auxTipo = aux.resolveRetorne(ctx.cmd(i).cmdRetorne(), tipo)
+                        print('auxTipo : ', auxTipo)
+                        token = ctx.cmd(i).cmdRetorne().start
+                        print(token.line)
+                        #nodes = pctx.getTokens(pctx.getStart(), pctx.getStop())
+                        #print(nodes)
+
+
+                i += 1
+            
+ 
         #return self.visitChildren(ctx)
 
 
@@ -352,8 +371,6 @@ class AlgumaVisitor(ParseTreeVisitor):
         
         ident = ctx.identificador().getText()
         partes, dimensao = self.separaIdentDimensao(ctx.identificador())
-        print('TABELA DE SIMBOLOS')
-        print(self.tabela.Tabela)
 
         #partes = ident.split('.')
 
@@ -361,7 +378,7 @@ class AlgumaVisitor(ParseTreeVisitor):
 
             tipoVar = self.tabela.verificar(partes[0])
             if len(partes) > 1:
-                print('é um tipo diferente')
+                #print('é um tipo diferente')
                 if type(tipoVar[0]) is not TabelaDeSimbolos: #caso seja um tipo declarado anteriormente,
                                                              #recupere-o
                     tipoVar = self.tabela.verificar(tipoVar[0])
@@ -379,16 +396,11 @@ class AlgumaVisitor(ParseTreeVisitor):
             
             #dar um jeito de ver se a expressao só faz operações com o mesmo tipo
             exp_aritimetica_temp = ctx.expressao().termo_logico(0).fator_logico(0)
-            print('linha : ', ctx.identificador().IDENT(0).symbol.line)
-            print('tipoVar : ', tipoVar)
             aux = self.verificarTipo(exp_aritimetica_temp, ponteiro + tipoVar[0])
-            print('linha : ', ctx.identificador().IDENT(0).symbol.line)
             if aux[0] == '&' and tipoVar[1]:
                 aux = aux[1:]
 
             if aux != tipoVar[0] and not (tipoVar[0] in self.tiposCompativeis and aux in self.tiposCompativeis[tipoVar[0]]):
-                print(ident, aux, tipoVar[0])
-                print('salve')
                 listaErros.adicionarErroSemantico(ctx.identificador().IDENT(0).symbol, "atribuicao nao compativel para " + ponteiro2 + ident)
                                 
 
@@ -454,14 +466,10 @@ class AlgumaVisitor(ParseTreeVisitor):
             children = ctx.termo_logico
             if ctx.op_logico_1(0) != None:
                 conversao = True
-                print('ctx : ', ctx.getText())
-                print('op:', ctx.op_logico_1(0).getText())
         elif ctx_type is self.parser.Termo_logicoContext:
             children = ctx.fator_logico
             if ctx.op_logico_2(0) != None:
                 conversao = True
-                print('ctx : ', ctx.getText())
-                print('op:', ctx.op_logico_2(0).getText())
         elif ctx_type is self.parser.Fator_logicoContext:
             children = ctx.parcela_logica
             flag = False
@@ -472,8 +480,6 @@ class AlgumaVisitor(ParseTreeVisitor):
             children = ctx.exp_aritmetica
             if ctx.op_relacional() != None:
                 conversao = True
-                print('ctx : ', ctx.getText())
-                print('op:', ctx.op_relacional().getText())
         elif ctx_type is self.parser.Exp_aritmeticaContext:
             children = ctx.termo
         elif ctx_type is self.parser.TermoContext:
@@ -527,14 +533,16 @@ class AlgumaVisitor(ParseTreeVisitor):
             lista = self.funcoes.verificar(ident.text)
             tabela = lista[0]
             itens = list(tabela.Tabela)
+            
             '''
             print('---------------------------------------')
-            print('1. ', ident.text)
+            print('PARAMETROS')
             print(tabela.Tabela)
             print('---------------------------------------')
-            '''    
+            '''
 
             for i in range(0,len(tabela.Tabela)):
+                #print('ITEM -> ', itens[i], ' ', i, '/', len(tabela.Tabela))
                 expr = ctx.expressao(i)
                 tipoParam = tabela.verificar(itens[i])
                 if expr == None:
@@ -544,8 +552,6 @@ class AlgumaVisitor(ParseTreeVisitor):
                     expr = ctx.expressao(i)
                     aux = self.verificarTipo(expr, tipoParam[0])
                     if aux == None or aux != tipoParam[0]:
-                        print('expr : ', expr.getText())
-                        print('param : ', tipoParam[0], ' aux : ', aux)
                         #se os tipos forem diferentes, adicione erro
                         listaErros.adicionarErroSemantico(ident, 'incompatibilidade de parametros na chamada de ' + ident.text)
                         break
@@ -554,12 +560,15 @@ class AlgumaVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by AlgumaParser#cmdRetorne.
-    def visitCmdRetorne(self, ctx:AlgumaParser.CmdRetorneContext):
-        exp_aritimetica_temp = ctx.expressao().termo_logico(0).fator_logico(0)            
-        aux = self.verificarTipo(exp_aritimetica_temp, 'inteiro')
+    # uma pequena função para resolver o tipo do Retorne.
+    def resolveRetorne(self, ctx:AlgumaParser.CmdRetorneContext, tipo):
+        exp_aritimetica_temp = ctx.expressao()            
+        aux = self.verificarTipo(exp_aritimetica_temp, tipo)
         return aux
 
+    # Visit a parse tree produced by AlgumaParser#selecao.
+    def visitCmdRetorne(self, ctx:AlgumaParser.CmdRetorneContext):
+        return self.visitChildren(ctx)
 
     # Visit a parse tree produced by AlgumaParser#selecao.
     def visitSelecao(self, ctx:AlgumaParser.SelecaoContext):
@@ -636,17 +645,19 @@ class AlgumaVisitor(ParseTreeVisitor):
             if tipo == None:
                 listaErros.adicionarErroSemantico(t,  'identificador ' + text + ' nao declarado')
             elif len(partes) > 1:
+                '''
                 print('partes : ', partes)
                 print('tipo : ', tipo)
                 print(self.tabela.Tabela)
-                if type(tipo[0]) is not TabelaDeSimbolos: #caso seja um tipo registro declarado anteriormente,
+                '''
+                if type(tipo[0]) is not TabelaDeSimbolos and self.tabela.existe(tipo[0]): #caso seja um tipo registro declarado anteriormente,
                                                           #recupere-o
                     tipo = self.tabela.verificar(tipo[0])
 
                 if type(tipo[0]) is TabelaDeSimbolos:
                     tipo = tipo[0].verificar(partes[1]) #acesse a segunda parte do identificador
-                print('texto eh ', text)
-                print('linha : ', t.line, ' retornou ', tipo)
+                #print('texto eh ', text)
+                #print('linha : ', t.line, ' retornou ', tipo)
                 
                 if tipo is None: #quer dizer que alguma verificação acima retornou Falso
                     listaErros.adicionarErroSemantico(t,  'identificador ' + text + ' nao declarado')

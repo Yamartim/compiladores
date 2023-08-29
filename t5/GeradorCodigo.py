@@ -355,9 +355,44 @@ class GeradorCodigo(ParseTreeVisitor):
                 i += 1
             self.saida += '}\n'
         
+    def resolveIntervalo(self, ctx:AlgumaParser.ConstantesContext):
+        #recebe o contextp e retorna o intervalo
+        #começaremos somente com o primeiro intervalo, posteriormente
+        #essa função poderá ser estendida para multiplos intervalos
+
+        intervalo = ctx.numero_intervalo(0)
+        inicio = intervalo.NUM_INT(0).getText()
+        fim = inicio
+        if intervalo.NUM_INT(1) != None:
+            fim = intervalo.NUM_INT(1).getText()
+        
+        return int(inicio), int(fim)
+
     # Visit a parse tree produced by AlgumaParser#cmdCaso.
     def visitCmdCaso(self, ctx:AlgumaParser.CmdCasoContext):
-        return self.visitChildren(ctx)
+        self.saida += 'switch (' + self.expresaoToString(ctx.exp_aritmetica()) +  ') {\n'
+        i = 0
+        inicio = 0
+        fim = 0
+        while ctx.selecao().item_selecao(i) != None:
+            inicio, fim = self.resolveIntervalo(ctx.selecao().item_selecao(i).constantes())
+            for case in range(inicio, fim+1):
+                self.saida += 'case ' + str(case) + ': \n'
+            j = 0
+            while ctx.selecao().item_selecao(i).cmd(j) != None:
+                self.visitCmd(ctx.selecao().item_selecao(i).cmd(j))
+                j += 1
+            self.saida += 'break;\n'
+            i += 1
+
+        if ctx.cmdSenao() != None:
+            self.saida += 'default : '
+            j = 0
+            while ctx.cmdSenao().cmd(j) != None:
+                self.visitCmd(ctx.cmdSenao().cmd(j))
+                j += 1
+            self.saida += '}\n'
+            
 
 
     # Visit a parse tree produced by AlgumaParser#cmdPara.

@@ -202,7 +202,7 @@ class AlgumaVisitor(ParseTreeVisitor):
     # Visit a parse tree produced by AlgumaParser#declaracao_global.
     def visitDeclaracao_global(self, ctx:AlgumaParser.Declaracao_globalContext):
         ident = ctx.IDENT().symbol
-        tipo = None
+        tipoFunc = None
         if self.tabela.existe(ident.text):
             #adicionar erro porque esse identificador já está em uso
             listaErros.adicionarErroSemantico(ident, 'identificador '+ ident.text + ' ja declarado anteriormente')
@@ -233,17 +233,18 @@ class AlgumaVisitor(ParseTreeVisitor):
 
             #adicionar a função/procedimento na tabela de simbolos
             if ctx.tipo_estendido() != None:
-                tipo = ctx.tipo_estendido().getText()
+                tipoFunc = ctx.tipo_estendido().getText()
                 tipoVerificar = tipo
                 if tipo[0] == '^':
                     tipoVerificar = tipo[1:]
                 if tipoVerificar in self.tiposCompativeis or self.tabela.existe(tipoVerificar):
-                    self.funcoes.inserir(ident.text, [t ,tipo])
+                    self.funcoes.inserir(ident.text, [t ,tipoFunc])
                 else:
                     #adicionar erro pois tipo não existe
                     listaErros.adicionarErroSemantico(ident, 'tipo ' + tipo + ' nao declarado')
             else:
-                self.funcoes.inserir(ident.text, [t, None])
+                self.funcoes.inserir(ident.text, [t, None]) # em vez de None, também poderia ser o tipoFunc porque também
+                                                            # seria None caso chegasse nesse ponto
 
             i = 0
             while ctx.declaracao_local(i) != None:
@@ -254,8 +255,8 @@ class AlgumaVisitor(ParseTreeVisitor):
             while ctx.cmd(i) != None:
                 aux.visitCmd(ctx.cmd(i))
                 if ctx.cmd(i).cmdRetorne() != None:
-                    if tipo == None:
-                        listaErros.adicionarErroSemantico(ctx.cmd(i).cmdRetorne().getToken() ,'comando retorne nao permitido nesse escopo')
+                    if tipoFunc == None:
+                        listaErros.adicionarErroSemantico(ctx.cmd(i).cmdRetorne().start ,'comando retorne nao permitido nesse escopo')
                     else:
                         print('tipo : ', tipo)
                         auxTipo = aux.resolveRetorne(ctx.cmd(i).cmdRetorne(), tipo)
@@ -395,12 +396,14 @@ class AlgumaVisitor(ParseTreeVisitor):
             
             
             #dar um jeito de ver se a expressao só faz operações com o mesmo tipo
-            exp_aritimetica_temp = ctx.expressao().termo_logico(0).fator_logico(0)
+            exp_aritimetica_temp = ctx.expressao()
             aux = self.verificarTipo(exp_aritimetica_temp, ponteiro + tipoVar[0])
             if aux[0] == '&' and tipoVar[1]:
                 aux = aux[1:]
 
             if aux != tipoVar[0] and not (tipoVar[0] in self.tiposCompativeis and aux in self.tiposCompativeis[tipoVar[0]]):
+                print('aux eh ', aux)
+                print('tipo esperado era ', tipoVar[0])
                 listaErros.adicionarErroSemantico(ctx.identificador().IDENT(0).symbol, "atribuicao nao compativel para " + ponteiro2 + ident)
                                 
 
@@ -438,7 +441,7 @@ class AlgumaVisitor(ParseTreeVisitor):
                         self.tabela.inserir(ident.text, "INVALIDO")
                         return "INVALIDO"
                 
-            elif ctx.parcela_unario().identificador() != None or ctx.parcela_unario().IDENT() != None:
+            elif ctx.parcela_unario().identificador() != None:
                 if ctx.parcela_unario().identificador() != None:
                     ident = ctx.parcela_unario().identificador().IDENT(0).symbol
                 else:
@@ -456,11 +459,22 @@ class AlgumaVisitor(ParseTreeVisitor):
                     self.tabela.inserir(ident.text, "INVALIDO")
                     return "INVALIDO"
             elif ctx.parcela_unario().NUM_INT() != None:
-                
                 return "inteiro"
-            else:
-                
+            
+            elif ctx.parcela_unario().NUM_REAL() != None:
                 return "real"
+            
+            elif ctx.parcela_unario().IDENT() != None:
+                #entao é uma chamada, verificar tipo na tabela de funções
+                ident = ctx.parcela_unario().IDENT().symbol
+                
+                if self.funcoes.existe(ident.text):
+                    return self.funcoes.verificar(ident.text)[1]
+                else:
+                    #chamada de uma função na declarada, portanto, adicionar erro
+                    listaErros.adicionarErroSemantico(ident, 'funcao ' + ident.text + ' nao declarada')
+                    self.funcoes.inserir(ident.text, [None, "INVALIDO"])
+                    return "INVALIDO"
             
         if ctx_type is self.parser.ExpressaoContext:
             children = ctx.termo_logico

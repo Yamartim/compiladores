@@ -59,8 +59,8 @@ class GeradorCodigo(ParseTreeVisitor):
         self.saida += tipo + " "
         i = 0
         while ctx.identificador(i) != None:
-            self.saida += ctx.identificador(i).getText() + ','
-            self.tabela.inserir(ctx.identificador(i).getText() + dimensao, [tipo, False])
+            self.saida += ctx.identificador(i).getText() + dimensao + ','
+            self.tabela.inserir(ctx.identificador(i).getText(), [tipo + dimensao, False])
             i += 1
         self.saida = self.saida[:-1] + ";\n"
         
@@ -303,7 +303,9 @@ class GeradorCodigo(ParseTreeVisitor):
     def visitCmdLeia(self, ctx:AlgumaParser.CmdLeiaContext):
         i = 0
         while ctx.identificador(i) != None:
+            
             tipo = self.tabela.verificar(ctx.identificador(i).getText())[0]
+            print(tipo)
             
             self.saida += 'scanf(\"' + self.retornarTipoScan(tipo) + '\", &' + ctx.identificador(i).getText() + ');\n'
             i += 1
@@ -314,7 +316,7 @@ class GeradorCodigo(ParseTreeVisitor):
             return '%d'
         elif tipo == 'float':
             return '%f'
-        elif tipo == 'string':
+        elif tipo == 'string' or tipo.startswith('char['):
             return '%s'
         elif tipo == 'bool':
             return '%d'

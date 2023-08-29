@@ -242,10 +242,12 @@ class GeradorCodigo(ParseTreeVisitor):
             return None
 
         if ctx_type is self.parser.ParcelaContext:
-            if ctx.parcela_unario().expressao(0) != None and ctx.parcela_unario().expressao(0).getText()[0] == '(':
-                return "(" + self.expresaoToString( ctx.parcela_unario().expressao(0)) + ")"
-            else:
-                return ctx.getText()
+            if ctx.parcela_unario() != None and ctx.parcela_unario().expressao(0) != None:
+                print ('string ', ctx.parcela_unario().expressao(0).getText())
+                if ctx.parcela_unario().expressao(0).getText().startswith('('):
+                    return "(" + self.expresaoToString( ctx.parcela_unario().expressao(0)) + ")"
+                
+            return ctx.getText()
             
         if ctx_type is self.parser.ExpressaoContext:
             children = ctx.termo_logico
@@ -327,8 +329,9 @@ class GeradorCodigo(ParseTreeVisitor):
     def visitCmdEscreva(self, ctx:AlgumaParser.CmdEscrevaContext):
         i = 0
         while ctx.expressao(i) != None:
-            tipo = self.retornarTipoScan(self.verificarTipo(ctx.expressao(i))) 
-            self.saida += "printf(\"" + tipo + "\"," + self.expresaoToString(ctx.expressao(i)) + ");\n"
+            tipo = self.verificarTipo(ctx.expressao(i))
+            print('tipo :', tipo)
+            self.saida += "printf(\"" + self.retornarTipoScan(tipo) + "\"," + self.expresaoToString(ctx.expressao(i)) + ");\n"
             i += 1
         return self.visitChildren(ctx)
 

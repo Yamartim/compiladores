@@ -22,6 +22,7 @@ class GeradorCodigo(ParseTreeVisitor):
         self.saida += "#include <stdlib.h>\n"
         self.saida += "\n"
         # self.visitDeclaracoes aqui para procedimentos, implementar depois
+        self.visitDeclaracoes(ctx.declaracoes())
         self.saida += "\n"
         self.saida += "int main() {\n"
         self.visitCorpo(ctx.corpo())
@@ -36,6 +37,7 @@ class GeradorCodigo(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#decl_local_global.
     def visitDecl_local_global(self, ctx:AlgumaParser.Decl_local_globalContext):
+
         return self.visitChildren(ctx)
 
 
@@ -99,6 +101,13 @@ class GeradorCodigo(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#valor_constante.
     def visitValor_constante(self, ctx:AlgumaParser.Valor_constanteContext):
+        tipo = ctx.getText()
+        if tipo == 'verdadeiro':
+            tipo = '1'
+        elif tipo == 'false':
+            tipo = '0'
+        parent = ctx.parentCtx
+        self.saida += '#define ' + parent.IDENT().getText() + ' ' + tipo + '\n'
         return self.visitChildren(ctx)
 
 
@@ -148,7 +157,6 @@ class GeradorCodigo(ParseTreeVisitor):
             elif ctx.parcela_unario().identificador() != None:
                 ident = ctx.parcela_unario().identificador().IDENT(0).symbol
                 tipo = self.tabela.verificar(ident.text)[0]
-                print(tipo)
                 if (type(tipo) is TabelaDeSimbolos or self.tabela.existe(tipo)) and ctx.parcela_unario().identificador().IDENT(1) != None:
                     #entao temos uma segunda parte no ident
                     ident2 = ctx.parcela_unario().identificador().IDENT(1).symbol
@@ -216,7 +224,6 @@ class GeradorCodigo(ParseTreeVisitor):
         if conversao:
             return 'bool'
 
-        print(type(ctx))
         return aux
     
     def conversaoOperadorC(self, operator):
@@ -243,7 +250,6 @@ class GeradorCodigo(ParseTreeVisitor):
 
         if ctx_type is self.parser.ParcelaContext:
             if ctx.parcela_unario() != None and ctx.parcela_unario().expressao(0) != None:
-                print ('string ', ctx.parcela_unario().expressao(0).getText())
                 if ctx.parcela_unario().expressao(0).getText().startswith('('):
                     return "(" + self.expresaoToString( ctx.parcela_unario().expressao(0)) + ")"
                 
@@ -307,7 +313,6 @@ class GeradorCodigo(ParseTreeVisitor):
         while ctx.identificador(i) != None:
             
             tipo = self.tabela.verificar(ctx.identificador(i).getText())[0]
-            print(tipo)
             
             self.saida += 'scanf(\"' + self.retornarTipoScan(tipo) + '\", &' + ctx.identificador(i).getText() + ');\n'
             i += 1
@@ -330,7 +335,6 @@ class GeradorCodigo(ParseTreeVisitor):
         i = 0
         while ctx.expressao(i) != None:
             tipo = self.verificarTipo(ctx.expressao(i))
-            print('tipo :', tipo)
             self.saida += "printf(\"" + self.retornarTipoScan(tipo) + "\"," + self.expresaoToString(ctx.expressao(i)) + ");\n"
             i += 1
         return self.visitChildren(ctx)

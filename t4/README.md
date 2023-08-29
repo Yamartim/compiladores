@@ -5,10 +5,10 @@ Membros:
 - Martim Lima
 
 ### Tutorial para a execução com o corretor automatico:
-`$ java -jar compiladores-corretor-automatico-1.0-SNAPSHOT-jar-with-dependencies.jar "python3 main.py" gcc <pasta temp> <indicar a pasta casos-de-teste> <nome do grupo> "t3"`
+`$ java -jar compiladores-corretor-automatico-1.0-SNAPSHOT-jar-with-dependencies.jar "python3 main.py" gcc <pasta temp> <indicar a pasta casos-de-teste> <nome do grupo> "t4"`
 
 Exemplo de execução no Ubuntu:
-`$ java -jar compiladores-corretor-automatico-1.0-SNAPSHOT-jar-with-dependencies.jar "python3 main.py" gcc ../temp/ ../casos-de-teste/casos-de-teste "nome do grupo" "t3"`
+`$ java -jar compiladores-corretor-automatico-1.0-SNAPSHOT-jar-with-dependencies.jar "python3 main.py" gcc ../temp/ ../casos-de-teste/casos-de-teste "nome do grupo" "t4"`
 
 ### Tutorial t4 passo a passo:
 1. Fazer o download dos arquivos

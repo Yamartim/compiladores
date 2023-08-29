@@ -365,6 +365,7 @@ class GeradorCodigo(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#cmdAtribuicao.
     def visitCmdAtribuicao(self, ctx:AlgumaParser.CmdAtribuicaoContext):
+        self.saida += ctx.identificador().getText() + ' = ' + self.expresaoToString(ctx.expressao()) + ';\n'
         return self.visitChildren(ctx)
 
 

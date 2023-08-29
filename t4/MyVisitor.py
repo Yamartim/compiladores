@@ -20,6 +20,7 @@ class AlgumaVisitor(ParseTreeVisitor):
     def construtor(self, tabelaCriada):
         self.tabela = TabelaDeSimbolos()
         self.tabela.concatenar(tabelaCriada.Tabela)
+        self.funcoes = TabelaDeSimbolos()
 
     def separaIdentDimensao(self, ctx:AlgumaParser.IdentificadorContext):
         listaIDENT = []
@@ -72,7 +73,7 @@ class AlgumaVisitor(ParseTreeVisitor):
                 
             ident = ctx.identificador(i).IDENT(0).getSymbol()
             i += 1
-            if self.tabela.existe(ident.text):
+            if self.tabela.existe(ident.text) or self.funcoes.existe(ident.text):
                 listaErros.adicionarErroSemantico(ident, 'identificador '+ ident.text + ' ja declarado anteriormente')
                 continue
             _, dimensao = self.separaIdentDimensao(t)
@@ -127,7 +128,7 @@ class AlgumaVisitor(ParseTreeVisitor):
             
         elif ctx.tipo() != None:
             ident = ctx.IDENT().getSymbol()
-            if self.tabela.existe(ident.text):
+            if self.tabela.existe(ident.text) or self.funcoes.existe(ident.text):
                 listaErros.adicionarErroSemantico(ident, 'identificador '+ ident.text + ' ja declarado anteriormente')
 
             elif ctx.tipo().registro() != None:
@@ -203,7 +204,7 @@ class AlgumaVisitor(ParseTreeVisitor):
     def visitDeclaracao_global(self, ctx:AlgumaParser.Declaracao_globalContext):
         ident = ctx.IDENT().symbol
         tipoFunc = None
-        if self.tabela.existe(ident.text):
+        if self.tabela.existe(ident.text) or self.funcoes.existe(ident.text):
             #adicionar erro porque esse identificador já está em uso
             listaErros.adicionarErroSemantico(ident, 'identificador '+ ident.text + ' ja declarado anteriormente')
 
@@ -397,6 +398,7 @@ class AlgumaVisitor(ParseTreeVisitor):
             
             #dar um jeito de ver se a expressao só faz operações com o mesmo tipo
             exp_aritimetica_temp = ctx.expressao()
+            print('expr ', exp_aritimetica_temp.getText())
             aux = self.verificarTipo(exp_aritimetica_temp, ponteiro + tipoVar[0])
             if aux[0] == '&' and tipoVar[1]:
                 aux = aux[1:]
@@ -442,15 +444,20 @@ class AlgumaVisitor(ParseTreeVisitor):
                         return "INVALIDO"
                 
             elif ctx.parcela_unario().identificador() != None:
-                if ctx.parcela_unario().identificador() != None:
-                    ident = ctx.parcela_unario().identificador().IDENT(0).symbol
-                else:
-                    ident = ctx.parcela_unario().IDENT().symbol
-                
-                                    
+                ident = ctx.parcela_unario().identificador().IDENT(0).symbol
 
                 if self.tabela.existe(ident.text):
-                    return self.tabela.verificar(ident.text)[0]
+                    tipo = self.tabela.verificar(ident.text)[0]
+                    if (type(tipo) is TabelaDeSimbolos or self.tabela.existe(tipo)) and ctx.parcela_unario().identificador().IDENT(1) != None:
+                        #entao temos uma segunda parte no ident
+                        ident2 = ctx.parcela_unario().identificador().IDENT(1).symbol
+                        if self.tabela.existe(tipo):
+                            tipo = self.tabela.verificar(tipo)[0] # recupera a tabela de simbolos do registro
+
+                        if type(tipo) is TabelaDeSimbolos: #acessa a tabela de simbolos do registro e recupera a parte solicitada
+                            tipo = tipo.verificar(ident2.text)[0]
+                        
+                    return tipo
                 elif self.funcoes.existe(ident.text):
                     return self.funcoes.verificar(ident.text)[1]
                 else:

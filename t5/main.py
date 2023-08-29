@@ -4,6 +4,7 @@ from AlgumaLexer import AlgumaLexer
 from AlgumaParser import AlgumaParser
 from antlr4.error.ErrorListener import ErrorListener
 from MyVisitor import AlgumaVisitor
+from GeradorCodigo import GeradorCodigo
 from listaErros import listaErros
 
 
@@ -76,14 +77,25 @@ def main(argv):
 
     stream = CommonTokenStream(lexer)
     parser = AlgumaParser(stream)
-    parser.addErrorListener( MyErrorListener(file_out))
+    #parser.addErrorListener( MyErrorListener(file_out))
     #try:
     tree = parser.programa()
     visitor = AlgumaVisitor()
     visitor.visitPrograma(tree, parser)
         
-    listaErros.printarErros()    
-    listaErros.printarArquivo(file_out)
+    listaErros.printarErros()
+    if listaErros.listaErrosSemanticos != []:
+        listaErros.printarArquivo(file_out)
+    else:
+        input = FileStream(argv[1], encoding='utf-8')
+        lexer = AlgumaLexer(input)
+        stream2 = CommonTokenStream(lexer)
+        parser = AlgumaParser(stream2)
+        tree = parser.programa()
+        gerador = GeradorCodigo(parser)
+        gerador.visitPrograma(tree)
+        print(gerador.saida)
+        file_out.write(gerador.saida)
 
     return
 

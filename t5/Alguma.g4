@@ -46,9 +46,9 @@ cmdLeia : 'leia' '(' '^'? identificador (',' '^'? identificador)* ')';
 
 cmdEscreva : 'escreva' '(' expressao (',' expressao)* ')';
 
-cmdSe : 'se' expressao 'entao' cmd* ('senao' cmd*)? 'fim_se';
+cmdSe : 'se' expressao 'entao' cmd* (cmdSenao)? 'fim_se';
 
-cmdCaso : 'caso' exp_aritmetica 'seja' selecao ('senao' cmd*)? 'fim_caso';
+cmdCaso : 'caso' exp_aritmetica 'seja' selecao (cmdSenao)? 'fim_caso';
 
 cmdPara : 'para' IDENT '<-' exp_aritmetica 'ate' exp_aritmetica 'faca' cmd* 'fim_para';
 
@@ -61,6 +61,8 @@ cmdAtribuicao : '^'? identificador '<-' expressao;
 cmdChamada : IDENT '(' expressao (',' expressao)* ')';
 
 cmdRetorne : 'retorne' expressao;
+
+cmdSenao : 'senao' cmd*;
 
 selecao : item_selecao*;
 

@@ -287,7 +287,7 @@ class GeradorCodigo(ParseTreeVisitor):
             if operator2:
                 if operator() != None:
                     aux2 = self.expresaoToString(children(1))
-                    aux += ' ' + self.conversaoOperadorC(operator(i).getText()) + ' ' + aux2
+                    aux += ' ' + self.conversaoOperadorC(operator().getText()) + ' ' + aux2
             else:
                 while operator(i) != None:
                     aux2 = self.expresaoToString(children(i+1))
@@ -340,9 +340,21 @@ class GeradorCodigo(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#cmdSe.
     def visitCmdSe(self, ctx:AlgumaParser.CmdSeContext):
-        return self.visitChildren(ctx)
-
-
+        
+        self.saida += 'if (' + self.expresaoToString(ctx.expressao()) + ') {\n'
+        i = 0
+        while ctx.cmd(i) != None:
+            self.visitCmd(ctx.cmd(i))
+            i += 1
+        self.saida += '}\n'
+        if ctx.cmdSenao() != None:
+            self.saida += 'else {\n'
+            i = 0
+            while ctx.cmdSenao().cmd(i) != None:
+                self.visitCmd(ctx.cmdSenao().cmd(i))
+                i += 1
+            self.saida += '}\n'
+        
     # Visit a parse tree produced by AlgumaParser#cmdCaso.
     def visitCmdCaso(self, ctx:AlgumaParser.CmdCasoContext):
         return self.visitChildren(ctx)

@@ -8,4 +8,5 @@ Os trabalhos estão organizados nas suas respectivas pastas com um README própr
 Acesse:
 - [T1](t1/README.md)
 - [T2](t2/README.md)
-- T3 em desenvolvimento//(t3\README.md)
+- [T3](t3/README.md)
+- [T4](t4/README.md)

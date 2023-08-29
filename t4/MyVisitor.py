@@ -398,7 +398,6 @@ class AlgumaVisitor(ParseTreeVisitor):
             
             #dar um jeito de ver se a expressao só faz operações com o mesmo tipo
             exp_aritimetica_temp = ctx.expressao()
-            print('expr ', exp_aritimetica_temp.getText())
             aux = self.verificarTipo(exp_aritimetica_temp, ponteiro + tipoVar[0])
             if aux[0] == '&' and tipoVar[1]:
                 aux = aux[1:]
@@ -482,6 +481,9 @@ class AlgumaVisitor(ParseTreeVisitor):
                     listaErros.adicionarErroSemantico(ident, 'funcao ' + ident.text + ' nao declarada')
                     self.funcoes.inserir(ident.text, [None, "INVALIDO"])
                     return "INVALIDO"
+            else:
+                #ultimo caso possível, é o de uma expressao entre parenteses, resolver essa expressao
+                return self.verificarTipo(ctx.parcela_unario().expressao(0), tipo)
             
         if ctx_type is self.parser.ExpressaoContext:
             children = ctx.termo_logico
@@ -589,6 +591,9 @@ class AlgumaVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#selecao.
     def visitCmdRetorne(self, ctx:AlgumaParser.CmdRetorneContext):
+        #verificar se o parent do parent, ou seja, se não é um retorne no Corpo do algoritmo
+        if type(ctx.parentCtx.parentCtx) is self.parser.CorpoContext:
+            listaErros.adicionarErroSemantico(ctx.start ,'comando retorne nao permitido nesse escopo')
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by AlgumaParser#selecao.

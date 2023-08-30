@@ -62,17 +62,32 @@ class GeradorCodigo(ParseTreeVisitor):
             tipo = "char"
             dimensao = "[80]"
 
-        self.saida += tipo + " "
-        i = 0
-        while ctx.identificador(i) != None:
-            self.saida += ponteiro + ctx.identificador(i).getText() + dimensao + ','
-            if ponteiro == '*':
-                self.tabela.inserir(ctx.identificador(i).getText(), [tipo + dimensao, True])
-            else:
-                self.tabela.inserir(ctx.identificador(i).getText(), [tipo + dimensao, False])
-            i += 1
-        self.saida = self.saida[:-1] + ";\n"
-        
+        if ctx.tipo().tipo_estendido() != None:
+            
+            self.saida += tipo + " "
+            i = 0
+            while ctx.identificador(i) != None:
+                self.saida += ponteiro + ctx.identificador(i).getText() + dimensao + ','
+                if ponteiro == '*':
+                    self.tabela.inserir(ctx.identificador(i).getText(), [tipo + dimensao, True])
+                else:
+                    self.tabela.inserir(ctx.identificador(i).getText(), [tipo + dimensao, False])
+                i += 1
+            self.saida = self.saida[:-1] + ";\n"
+
+        else:
+            #entao o tipo é um registro
+            tipo = self.visitRegistro(ctx.tipo().registro())
+            i = 0
+            while ctx.identificador(i) != None:
+                self.saida += ponteiro + ctx.identificador(i).getText() + dimensao + ','
+                if ponteiro == '*':
+                    self.tabela.inserir(ctx.identificador(i).getText(), [tipo, True])
+                else:
+                    self.tabela.inserir(ctx.identificador(i).getText(), [tipo, False])
+                i += 1
+            self.saida = self.saida[:-1] + ";\n"
+
 
 
     # Visit a parse tree produced by AlgumaParser#identificador.
@@ -87,22 +102,22 @@ class GeradorCodigo(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#tipo.
     def visitTipo(self, ctx:AlgumaParser.TipoContext):
-        return self.visitChildren(ctx)
+        return
 
 
     # Visit a parse tree produced by AlgumaParser#tipo_basico.
     def visitTipo_basico(self, ctx:AlgumaParser.Tipo_basicoContext):
-        return self.visitChildren(ctx)
+        return 
 
 
     # Visit a parse tree produced by AlgumaParser#tipo_basico_ident.
     def visitTipo_basico_ident(self, ctx:AlgumaParser.Tipo_basico_identContext):
-        return self.visitChildren(ctx)
+        return 
 
 
     # Visit a parse tree produced by AlgumaParser#tipo_estendido.
     def visitTipo_estendido(self, ctx:AlgumaParser.Tipo_estendidoContext):
-        return self.visitChildren(ctx)
+        return
 
 
     # Visit a parse tree produced by AlgumaParser#valor_constante.
@@ -119,7 +134,16 @@ class GeradorCodigo(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#registro.
     def visitRegistro(self, ctx:AlgumaParser.RegistroContext):
-        return self.visitChildren(ctx)
+        self.saida += 'struct{\n'
+        i = 0
+        temp = GeradorCodigo(self.parser)
+        while ctx.variavel(i) != None:
+            temp.visitVariavel(ctx.variavel(i))
+            i += 1
+        self.saida += temp.saida
+        self.saida += '} '
+        return temp.tabela
+
 
 
     # Visit a parse tree produced by AlgumaParser#declaracao_global.
@@ -168,7 +192,9 @@ class GeradorCodigo(ParseTreeVisitor):
                 
             elif ctx.parcela_unario().identificador() != None:
                 ident = ctx.parcela_unario().identificador().IDENT(0).symbol
+                print('ident : ', ident.text)
                 tipo = self.tabela.verificar(ident.text)[0]
+                print('tipo :', tipo)
                 if (type(tipo) is TabelaDeSimbolos or self.tabela.existe(tipo)) and ctx.parcela_unario().identificador().IDENT(1) != None:
                     #entao temos uma segunda parte no ident
                     ident2 = ctx.parcela_unario().identificador().IDENT(1).symbol
@@ -438,8 +464,12 @@ class GeradorCodigo(ParseTreeVisitor):
         ponteiro = ''
         if text.startswith('^'):
             ponteiro = '*'
-        self.saida += ponteiro + ctx.identificador().getText() + ' = ' + self.expresaoToString(ctx.expressao()) + ';\n'
-        return self.visitChildren(ctx)
+        
+        tipo = self.verificarTipo(ctx.expressao())
+        if tipo == 'string':
+            self.saida += 'strcpy(' + ponteiro + ctx.identificador().getText() + ', ' + self.expresaoToString(ctx.expressao()) + ');\n'
+        else:
+            self.saida += ponteiro + ctx.identificador().getText() + ' = ' + self.expresaoToString(ctx.expressao()) + ';\n'
 
 
     # Visit a parse tree produced by AlgumaParser#cmdChamada.

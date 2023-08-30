@@ -152,11 +152,42 @@ class GeradorCodigo(ParseTreeVisitor):
         self.saida += '} '
         return temp.tabela
 
+    def conversaoTipoC(self, tipo):
+        if tipo == "inteiro":
+            tipo = "int"
+        elif tipo == "real":
+            tipo = "float"
+        elif tipo == "literal":
+            tipo = "char*"
+        return tipo
 
 
     # Visit a parse tree produced by AlgumaParser#declaracao_global.
     def visitDeclaracao_global(self, ctx:AlgumaParser.Declaracao_globalContext):
-        return self.visitChildren(ctx)
+        tipo = 'void'
+        if ctx.tipo_estendido() != None:
+            tipo = ctx.tipo_estendido().getText()
+            tipo = self.conversaoTipoC(tipo)
+            print('++++++', tipo)
+        ident = ctx.IDENT().getText()
+        self.funcoes.inserir(ident, [tipo, False])
+
+        self.saida += tipo + ' ' + ctx.IDENT().getText() + '('
+        tabelaTemp = self.visitParametros(ctx.parametros())
+        self.saida += ') {\n'
+        temp = GeradorCodigo(self.parser)
+        temp.tabela.concatenar(tabelaTemp.Tabela)
+        i = 0
+        while ctx.declaracao_local(i) != None:
+            temp.visitDeclaracao_local(ctx.declaracao_local(i))
+            i += 1
+
+        temp.visitVariosCmd(ctx)
+
+        self.saida += temp.saida
+        self.saida += '}\n'
+        
+        return
 
 
     # Visit a parse tree produced by AlgumaParser#parametro.
@@ -166,7 +197,25 @@ class GeradorCodigo(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#parametros.
     def visitParametros(self, ctx:AlgumaParser.ParametrosContext):
-        return self.visitChildren(ctx)
+        tabelaTemp = TabelaDeSimbolos()
+        i = 0
+        ponteiro = False
+        while ctx.parametro(i) != None:
+            j = 0
+            ponteiro = False
+            tipo = ctx.parametro(i).tipo_estendido().getText()
+            tipo = self.conversaoTipoC(tipo)
+            while ctx.parametro(i).identificador(j) != None:
+                ident = ctx.parametro(i).identificador(j).getText()
+                ponteiro = False
+                self.saida += tipo + ' ' + ident + ','
+                if tipo[-1] == '*':
+                    ponteiro = True
+                tabelaTemp.inserir(ident, [tipo, ponteiro])
+                j += 1
+            i += 1
+        self.saida = self.saida[:-1]
+        return tabelaTemp
 
 
     # Visit a parse tree produced by AlgumaParser#corpo.
@@ -375,7 +424,7 @@ class GeradorCodigo(ParseTreeVisitor):
             return '%d'
         elif tipo == 'float':
             return '%f'
-        elif tipo == 'string' or tipo.startswith('char['):
+        elif tipo == 'string' or tipo.startswith('char[') or tipo == 'char*':
             return '%s'
         elif tipo == 'bool':
             return '%d'
@@ -483,6 +532,13 @@ class GeradorCodigo(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#cmdChamada.
     def visitCmdChamada(self, ctx:AlgumaParser.CmdChamadaContext):
+        self.saida += ctx.IDENT().getText() + '('
+        i = 0
+        while ctx.expressao(i) != None:
+            self.saida += self.expresaoToString(ctx.expressao(i)) + ','
+            i += 1
+        self.saida = self.saida[:-1]
+        self.saida += ');\n'
         return self.visitChildren(ctx)
 
 

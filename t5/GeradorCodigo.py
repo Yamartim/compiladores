@@ -408,7 +408,9 @@ class GeradorCodigo(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#cmdEnquanto.
     def visitCmdEnquanto(self, ctx:AlgumaParser.CmdEnquantoContext):
-        return self.visitChildren(ctx)
+        self.saida += 'while (' + self.expresaoToString(ctx.expressao()) + ') {\n'
+        self.visitVariosCmd(ctx)
+        self.saida += '}\n'
 
 
     # Visit a parse tree produced by AlgumaParser#cmdFaca.

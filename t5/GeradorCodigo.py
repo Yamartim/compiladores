@@ -273,7 +273,7 @@ class GeradorCodigo(ParseTreeVisitor):
             elif ctx.parcela_unario().IDENT() != None:
                 #entao é uma chamada, verificar tipo na tabela de funções
                 ident = ctx.parcela_unario().IDENT().symbol
-                return self.funcoes.verificar(ident.text)[1]
+                return self.funcoes.verificar(ident.text)[0]
             else:
                 #ultimo caso possível, é o de uma expressao entre parenteses, resolver essa expressao
                 return self.verificarTipo(ctx.parcela_unario().expressao(0))
@@ -436,9 +436,9 @@ class GeradorCodigo(ParseTreeVisitor):
         i = 0
         while ctx.expressao(i) != None:
             tipo = self.verificarTipo(ctx.expressao(i))
+            print('TIPO ===== ', tipo)
             self.saida += "printf(\"" + self.retornarTipoScan(tipo) + "\"," + self.expresaoToString(ctx.expressao(i)) + ");\n"
             i += 1
-        return self.visitChildren(ctx)
 
 
     
@@ -539,12 +539,11 @@ class GeradorCodigo(ParseTreeVisitor):
             i += 1
         self.saida = self.saida[:-1]
         self.saida += ');\n'
-        return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by AlgumaParser#cmdRetorne.
     def visitCmdRetorne(self, ctx:AlgumaParser.CmdRetorneContext):
-        return self.visitChildren(ctx)
+        self.saida += 'return ' + self.expresaoToString(ctx.expressao()) + ';\n'
 
 
     # Visit a parse tree produced by AlgumaParser#selecao.

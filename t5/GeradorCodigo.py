@@ -43,6 +43,14 @@ class GeradorCodigo(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#declaracao_local.
     def visitDeclaracao_local(self, ctx:AlgumaParser.Declaracao_localContext):
+        if ctx.tipo() != None:
+            self.saida += 'typedef '
+            if ctx.tipo().registro() != None:
+                tabela = self.visitRegistro(ctx.tipo().registro())
+            else:
+                self.saida += ctx.tipo().getText() + ' '
+            self.saida += ctx.IDENT().getText() + ';\n'
+            self.tabela.inserir(ctx.IDENT().getText(), [tabela, False])
         return self.visitChildren(ctx)
 
 
@@ -198,6 +206,7 @@ class GeradorCodigo(ParseTreeVisitor):
                 if (type(tipo) is TabelaDeSimbolos or self.tabela.existe(tipo)) and ctx.parcela_unario().identificador().IDENT(1) != None:
                     #entao temos uma segunda parte no ident
                     ident2 = ctx.parcela_unario().identificador().IDENT(1).symbol
+                    print('ident 2: ', ident2 )
                     if self.tabela.existe(tipo):
                         tipo = self.tabela.verificar(tipo)[0] # recupera a tabela de simbolos do registro
 

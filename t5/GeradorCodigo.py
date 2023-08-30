@@ -48,7 +48,11 @@ class GeradorCodigo(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#variavel.
     def visitVariavel(self, ctx:AlgumaParser.VariavelContext):
+        ponteiro = ''
         tipo = ctx.tipo().getText()
+        if tipo.startswith('^'):
+            ponteiro = '*'
+            tipo = tipo[1:]
         dimensao = ""
         if tipo == "inteiro":
             tipo = "int"
@@ -61,12 +65,14 @@ class GeradorCodigo(ParseTreeVisitor):
         self.saida += tipo + " "
         i = 0
         while ctx.identificador(i) != None:
-            self.saida += ctx.identificador(i).getText() + dimensao + ','
-            self.tabela.inserir(ctx.identificador(i).getText(), [tipo + dimensao, False])
+            self.saida += ponteiro + ctx.identificador(i).getText() + dimensao + ','
+            if ponteiro == '*':
+                self.tabela.inserir(ctx.identificador(i).getText(), [tipo + dimensao, True])
+            else:
+                self.tabela.inserir(ctx.identificador(i).getText(), [tipo + dimensao, False])
             i += 1
         self.saida = self.saida[:-1] + ";\n"
         
-        return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by AlgumaParser#identificador.
@@ -428,7 +434,11 @@ class GeradorCodigo(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#cmdAtribuicao.
     def visitCmdAtribuicao(self, ctx:AlgumaParser.CmdAtribuicaoContext):
-        self.saida += ctx.identificador().getText() + ' = ' + self.expresaoToString(ctx.expressao()) + ';\n'
+        text = ctx.getText()
+        ponteiro = ''
+        if text.startswith('^'):
+            ponteiro = '*'
+        self.saida += ponteiro + ctx.identificador().getText() + ' = ' + self.expresaoToString(ctx.expressao()) + ';\n'
         return self.visitChildren(ctx)
 
 

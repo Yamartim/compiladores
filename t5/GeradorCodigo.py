@@ -53,6 +53,13 @@ class GeradorCodigo(ParseTreeVisitor):
             self.tabela.inserir(ctx.IDENT().getText(), [tabela, False])
         return self.visitChildren(ctx)
 
+    def separaIdentDimensao(self, string):
+        string = string.split('[', 2)
+        print(string)
+        dimensao = None
+        if len(string) > 1:
+            dimensao = '[' + string[1]
+        return string[0], dimensao 
 
     # Visit a parse tree produced by AlgumaParser#variavel.
     def visitVariavel(self, ctx:AlgumaParser.VariavelContext):
@@ -69,17 +76,21 @@ class GeradorCodigo(ParseTreeVisitor):
         elif tipo == "literal":
             tipo = "char"
             dimensao = "[80]"
+            ponteiro = '*'
 
         if ctx.tipo().tipo_estendido() != None:
             
             self.saida += tipo + " "
             i = 0
             while ctx.identificador(i) != None:
-                self.saida += ponteiro + ctx.identificador(i).getText() + dimensao + ','
-                if ponteiro == '*':
-                    self.tabela.inserir(ctx.identificador(i).getText(), [tipo + dimensao, True])
+                ident, dimensao2 = self.separaIdentDimensao(ctx.identificador(i).getText())
+                if dimensao2 != None:
+                    dimensao = dimensao2
+                self.saida += ponteiro + ident + dimensao + ','
+                if ponteiro == '*' or dimensao != '':
+                    self.tabela.inserir(ident, [tipo + ponteiro, True])
                 else:
-                    self.tabela.inserir(ctx.identificador(i).getText(), [tipo + dimensao, False])
+                    self.tabela.inserir(ident, [tipo + ponteiro, False])
                 i += 1
             self.saida = self.saida[:-1] + ";\n"
 
@@ -250,18 +261,26 @@ class GeradorCodigo(ParseTreeVisitor):
             elif ctx.parcela_unario().identificador() != None:
                 ident = ctx.parcela_unario().identificador().IDENT(0).symbol
                 print('ident : ', ident.text)
-                tipo = self.tabela.verificar(ident.text)[0]
+                print(self.tabela.Tabela)
+                tipo, ponteiro = self.tabela.verificar(ident.text)
                 print('tipo :', tipo)
                 if (type(tipo) is TabelaDeSimbolos or self.tabela.existe(tipo)) and ctx.parcela_unario().identificador().IDENT(1) != None:
                     #entao temos uma segunda parte no ident
                     ident2 = ctx.parcela_unario().identificador().IDENT(1).symbol
                     print('ident 2: ', ident2 )
                     if self.tabela.existe(tipo):
-                        tipo = self.tabela.verificar(tipo)[0] # recupera a tabela de simbolos do registro
+                        tipo, ponteiro = self.tabela.verificar(tipo) # recupera a tabela de simbolos do registro
 
                     if type(tipo) is TabelaDeSimbolos: #acessa a tabela de simbolos do registro e recupera a parte solicitada
-                        tipo = tipo.verificar(ident2.text)[0]
+                        tipo, ponteiro = tipo.verificar(ident2.text)
                         
+                #resolver acesso a vetor
+                tipo2, dimensao = self.separaIdentDimensao(tipo)
+                if dimensao != None:
+                    if ponteiro:
+                        tipo = tipo2
+                        print('//////////////', tipo)
+
                 return tipo
     
             elif ctx.parcela_unario().NUM_INT() != None:

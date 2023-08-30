@@ -248,6 +248,7 @@ class GeradorCodigo(ParseTreeVisitor):
     def expresaoToString(self, ctx):
         ctx_type = type(ctx)
         flag = True
+        nao = ''
         operator = None
         operator2 = False
         i = 0
@@ -255,9 +256,9 @@ class GeradorCodigo(ParseTreeVisitor):
             return None
 
         if ctx_type is self.parser.ParcelaContext:
-            if ctx.parcela_unario() != None and ctx.parcela_unario().expressao(0) != None:
-                if ctx.parcela_unario().expressao(0).getText().startswith('('):
-                    return "(" + self.expresaoToString( ctx.parcela_unario().expressao(0)) + ")"
+            if ctx.parcela_unario() != None:
+                if ctx.parcela_unario().getText().startswith('('):
+                    return "(" + self.expresaoToString( ctx.parcela_unario().expressao(0) ) + ")"
                 
             return ctx.getText()
             
@@ -271,6 +272,8 @@ class GeradorCodigo(ParseTreeVisitor):
         elif ctx_type is self.parser.Fator_logicoContext:
             children = ctx.parcela_logica
             flag = False
+            if ctx.getText().startswith('nao'):
+                nao = '!'
         elif ctx_type is self.parser.Parcela_logicaContext:
             children = ctx.exp_relacional
             flag = False
@@ -287,6 +290,7 @@ class GeradorCodigo(ParseTreeVisitor):
         elif ctx_type is self.parser.FatorContext:
             children = ctx.parcela
             operator = ctx.op3
+
         
 
         if not flag: #flag para verificar o tipo de chamamendo de children
@@ -300,13 +304,14 @@ class GeradorCodigo(ParseTreeVisitor):
                 if operator() != None:
                     aux2 = self.expresaoToString(children(1))
                     aux += ' ' + self.conversaoOperadorC(operator().getText()) + ' ' + aux2
+                    print('salve')
             else:
                 while operator(i) != None:
                     aux2 = self.expresaoToString(children(i+1))
                     aux += ' ' + self.conversaoOperadorC(operator(i).getText()) + ' ' + aux2
                     i += 1
 
-        return aux
+        return nao + aux
 
     # Visit a parse tree produced by AlgumaParser#cmd.
     def visitCmd(self, ctx:AlgumaParser.CmdContext):
@@ -415,7 +420,10 @@ class GeradorCodigo(ParseTreeVisitor):
 
     # Visit a parse tree produced by AlgumaParser#cmdFaca.
     def visitCmdFaca(self, ctx:AlgumaParser.CmdFacaContext):
-        return self.visitChildren(ctx)
+        self.saida += 'do {\n'
+        self.visitVariosCmd(ctx)
+        self.saida += '} while (' + self.expresaoToString(ctx.expressao()) + ');\n'
+
 
 
     # Visit a parse tree produced by AlgumaParser#cmdAtribuicao.

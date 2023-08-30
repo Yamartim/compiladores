@@ -135,6 +135,12 @@ class GeradorCodigo(ParseTreeVisitor):
     def visitCorpo(self, ctx:AlgumaParser.CorpoContext):
         return self.visitChildren(ctx)
 
+    def visitVariosCmd(self, ctx):
+        i = 0
+        while ctx.cmd(i) != None:
+            self.visitCmd(ctx.cmd(i))
+            i += 1
+
 
     def verificarTipo(self, ctx):
         i = 0
@@ -346,17 +352,11 @@ class GeradorCodigo(ParseTreeVisitor):
     def visitCmdSe(self, ctx:AlgumaParser.CmdSeContext):
         
         self.saida += 'if (' + self.expresaoToString(ctx.expressao()) + ') {\n'
-        i = 0
-        while ctx.cmd(i) != None:
-            self.visitCmd(ctx.cmd(i))
-            i += 1
+        self.visitVariosCmd(ctx)
         self.saida += '}\n'
         if ctx.cmdSenao() != None:
             self.saida += 'else {\n'
-            i = 0
-            while ctx.cmdSenao().cmd(i) != None:
-                self.visitCmd(ctx.cmdSenao().cmd(i))
-                i += 1
+            self.visitVariosCmd(ctx.cmdSenao())
             self.saida += '}\n'
         
     def resolveIntervalo(self, ctx:AlgumaParser.ConstantesContext):
@@ -382,26 +382,28 @@ class GeradorCodigo(ParseTreeVisitor):
             inicio, fim = self.resolveIntervalo(ctx.selecao().item_selecao(i).constantes())
             for case in range(inicio, fim+1):
                 self.saida += 'case ' + str(case) + ': \n'
-            j = 0
-            while ctx.selecao().item_selecao(i).cmd(j) != None:
-                self.visitCmd(ctx.selecao().item_selecao(i).cmd(j))
-                j += 1
+            self.visitVariosCmd(ctx.selecao().item_selecao(i))
             self.saida += 'break;\n'
             i += 1
 
         if ctx.cmdSenao() != None:
             self.saida += 'default : '
-            j = 0
-            while ctx.cmdSenao().cmd(j) != None:
-                self.visitCmd(ctx.cmdSenao().cmd(j))
-                j += 1
+            self.visitVariosCmd(ctx.cmdSenao())
             self.saida += '}\n'
             
 
 
     # Visit a parse tree produced by AlgumaParser#cmdPara.
     def visitCmdPara(self, ctx:AlgumaParser.CmdParaContext):
-        return self.visitChildren(ctx)
+        ident = ctx.IDENT().getText()
+        inicio = self.expresaoToString(ctx.exp_aritmetica(0))
+        fim = self.expresaoToString(ctx.exp_aritmetica(1))
+        self.saida += 'for(' + ident + ' = ' + inicio + '; '
+        self.saida += ident + ' <= ' + fim + '; '
+        self.saida += ident + '++){\n'
+        self.visitVariosCmd(ctx)
+        self.saida += '}\n'
+
 
 
     # Visit a parse tree produced by AlgumaParser#cmdEnquanto.

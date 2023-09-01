@@ -1,46 +1,52 @@
+//java -jar ..\antlr-4.13.0-complete.jar TileMap.g4 -Dlanguage=Python3 -visitor -o .antlr/ 
 grammar TileMap;
 
 /*palavras chave*/
 
-Programa : DeclMapa Declaracoes Comandos EOF;
+nada: 'nada';
 
-DeclMapa : 'mapa' Identificador Num_Inteiro'px' Num_Inteiro'x'Num_Inteiro;
+programa : declMapa declaracoes comandos EOF;
 
-Declaracoes : Regioes|Biomas|Areas|Tiles;
+declMapa : 'mapa' Identificador Num_Inteiro'px' Num_Inteiro'x'Num_Inteiro;
 
-Regioes: 'Regioes:' DeclRegiao+; //conjunto de areas com um bioma associado
-DeclRegiao : Identificador '-' 'areas['Identificador (',' Identificador)* ']' 'areas['Identificador (',' Identificador)* ']';
+declaracoes : regioes|biomas|areas|tiles;
 
-Biomas: 'Biomas:' DeclBioma+;
-DeclBioma : Identificador '-' ; //pensar no que define um bioma
+regioes: 'Regioes:' declRegiao+; //conjunto de areas com um bioma associado
+declRegiao : Identificador '-' 'areas['Identificador (',' Identificador)* ']' 'areas['Identificador (',' Identificador)* ']';
 
-Areas: 'Areas:' DeclArea+;
-DeclArea : Identificador '-' TipoArea;
+biomas: 'Biomas:' declBioma+;
+declBioma : Identificador '-' ; //pensar no que define um bioma
 
-Tiles: 'Tiles:' DeclTile+;
-DeclTile : Identificador '-' CADEIA;
+areas: 'Areas:' declArea+;
+declArea : Identificador '-' tipoArea;
+
+tiles: 'Tiles:' declTile+;
+declTile : Identificador '-' CADEIA;
 
 /*areas e estruturas*/
 
-TipoArea : Ponto | Linha | Retang | Polign | Circulo;
+tipoArea : ponto | linha | retang | polign | circulo;
 
-Ponto : '('Num_Inteiro','Num_Inteiro')';
+ponto : '('Num_Inteiro','Num_Inteiro')';
 
-Linha : 'Linha('Ponto'-'Ponto')';
+linha : 'Linha('ponto'-'ponto')';
 
-Retang : 'Retangulo('Ponto'c'Num_Inteiro'lx'Num_Inteiro'ly)';
+retang : 'Retangulo('ponto'c,'Num_Inteiro'lx,'Num_Inteiro'ly)';
 
-Polign : 'Poligono('Ponto'c'Num_Inteiro'r'Num_Inteiro'ly)';
+polign : 'Poligono('ponto'c,'Num_Inteiro'r,'Num_Inteiro'ly)';
 
-Circulo : 'Circulo('Ponto'c'Num_Inteiro'r)';
+circulo : 'Circulo('ponto'c,'Num_Inteiro'r)';
 
-DeclEstrutura : Identificador':' SerieTiles+;
-SerieTiles : '[' Identificador (',' Identificador)* ']'; //incluir tile null
+declEstrutura : Identificador':' serieTiles+;
+serieTiles : '[' Identificador|nada (',' Identificador|nada)* ']'; //incluir tile null
 
 
 /*comandos*/
 
-Comandos:;
+comandos : cmdDesenhe ;
+
+cmdDesenhe : 'Desenhe('Identificador')' ;
+
 
 /*whitespace e comentarios*/
 

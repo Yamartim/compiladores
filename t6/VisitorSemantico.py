@@ -48,7 +48,7 @@ class TileMapVisitor(ParseTreeVisitor):
                 elif tipo != None and self.tabela.verificar(ident) != None:
                     temp = self.tabela.verificar(ident)
                     if temp[0] != tipo:
-                        listaErros.adicionarErro(ctx.start, 'identificador ' + temp[0] + 'nao eh do tipo ' + tipo)
+                        listaErros.adicionarErro(ctx.start, 'identificador ' + ident + ' nao é do tipo ' + tipo)
                 i += 1
         else:
             ident = ctx.Identificador().getText()

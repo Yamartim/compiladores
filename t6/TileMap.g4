@@ -3,19 +3,18 @@ grammar TileMap;
 
 /*palavras chave*/
 
-nada: 'nada';
 
 programa : declMapa declaracoes comandos EOF;
 
 declMapa : 'mapa' Identificador Num_Inteiro'px' Num_Inteiro'x'Num_Inteiro;
 
-declaracoes : regioes|biomas|areas|tiles;
+declaracoes : (regioes|biomas|areas|tiles|estruturas)*;
 
 regioes: 'Regioes:' declRegiao+; //conjunto de areas com um bioma associado
-declRegiao : Identificador '-' 'areas['Identificador (',' Identificador)* ']' 'areas['Identificador (',' Identificador)* ']';
+declRegiao : Identificador '-' Identificador 'areas''['Identificador (',' Identificador)* ']';
 
 biomas: 'Biomas:' declBioma+;
-declBioma : Identificador '-' ; //pensar no que define um bioma
+declBioma : Identificador '-' 'bg''['Identificador']' (',' 'tiles''['Identificador (',' Identificador)* ']')? (',' 'estruturas''['Identificador (',' Identificador)* ']')? ; //pensar no que define um bioma
 
 areas: 'Areas:' declArea+;
 declArea : Identificador '-' tipoArea;
@@ -23,36 +22,46 @@ declArea : Identificador '-' tipoArea;
 tiles: 'Tiles:' declTile+;
 declTile : Identificador '-' CADEIA;
 
+estruturas: 'Estruturas:' declEstrutura+;
+declEstrutura : Identificador':' serieTiles+;
+unidadeSerie : Nada | Identificador;
+serieTiles : '[' unidadeSerie (',' unidadeSerie)* ']'; //incluir tile null
+
 /*areas e estruturas*/
 
 tipoArea : ponto | linha | retang | polign | circulo;
 
 ponto : '('Num_Inteiro','Num_Inteiro')';
 
-linha : 'Linha('ponto'-'ponto')';
+linha : 'Linha''('ponto'-'ponto')';
 
-retang : 'Retangulo('ponto'c,'Num_Inteiro'lx,'Num_Inteiro'ly)';
+retang : 'Retangulo''('ponto'vert'','ponto'vert)'
+       | 'Retangulo''('ponto'c'','Num_Inteiro'lx'','Num_Inteiro'ly'')';
 
-polign : 'Poligono('ponto'c,'Num_Inteiro'r,'Num_Inteiro'ly)';
+polign : 'Poligono''('ponto'c'','Num_Inteiro'r'','Num_Inteiro'ly'')';
 
-circulo : 'Circulo('ponto'c,'Num_Inteiro'r)';
-
-declEstrutura : Identificador':' serieTiles+;
-serieTiles : '[' Identificador|nada (',' Identificador|nada)* ']'; //incluir tile null
+circulo : 'Circulo''('ponto'c'','Num_Inteiro'r'')';
 
 
 /*comandos*/
 
-comandos : cmdDesenhe ;
+comandos : (cmdDesenhe|cmdEspalharEstruturas|cmdMostrarDesenho|cmdSalvarDesenho)* ;
 
-cmdDesenhe : 'Desenhe('Identificador')' ;
+cmdDesenhe : 'Desenhe''('Identificador')' ;
+
+cmdEspalharEstruturas : 'Espalhe''('Identificador','Identificador')';
+
+cmdMostrarDesenho: 'Mostrar''('')';
+
+cmdSalvarDesenho: 'Salvar''('')';
 
 
 /*whitespace e comentarios*/
 
-Comentario: '//' ~('\n'|'\r'|'}')* '\r'? '\n' {skip();};
-Ws: ( ' ' | '\t' | '\r' | '\n') {skip();};
+Comentario: '//' ~('\n'|'\r'|'}')* '\r'? '\n' -> skip;
+Ws: ( ' ' | '\t' | '\r' | '\n') -> skip;
 
+Nada: 'nada'|'_';
 
 Num_Inteiro: ('0'..'9')+;
 

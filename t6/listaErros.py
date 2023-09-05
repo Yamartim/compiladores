@@ -1,25 +1,24 @@
 #import TabelaDeSimbolos
-from antlr4 import *
+#from antlr4 import *
 #from AlgumaParser import AlgumaParser
 
 class listaErros():
-    listaErros = []
 
     def __init__(self):
-        listaErros.listaErros = []
+        self.listaErros = []
 
-    def adicionarErro(t, mensagem):
-        listaErros.listaErros.append(f'Linha {t.line}: {mensagem}')
+    def adicionarErro(self, linha, mensagem):
+        self.listaErros.append(f'Linha {linha}: {mensagem}')
 
-    def printarErros():
-        listaErros.listaErros = list(dict.fromkeys(listaErros.listaErros))
-        for erro in listaErros.listaErros:
+    def printarErros(self):
+        self.listaErros = list(dict.fromkeys(self.listaErros))
+        for erro in self.listaErros:
             print(erro)
     
-    def printarArquivo(arquivo):
+    def printarArquivo(self, arquivo):
         
-        listaErros.listaErros = list(dict.fromkeys(listaErros.listaErros))
-        for erro in listaErros.listaErros:
+        self.listaErros = list(dict.fromkeys(self.listaErros))
+        for erro in self.listaErros:
             arquivo.write(erro + '\n')
         arquivo.write('Fim da compilacao\n')
         

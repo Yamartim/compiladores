@@ -11,3 +11,4 @@ Acesse:
 - [T3](t3/README.md)
 - [T4](t4/README.md)
 - [T5](t5/README.md)
+- [T6: Linguagem Tilemap!](t6/README.md)

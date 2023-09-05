@@ -1,0 +1,46 @@
+
+mapa meuMapa1 32px 30 x 30
+    Tiles:
+        agua - '..\..\..\assets\agua.png'
+        grama - '..\..\..\assets\grama.png'
+        terra - '..\..\..\assets\terra.png'
+        madeira - '..\..\..\assets\madeira.png'
+        folhas - '..\..\..\assets\folhas.png'
+        areia - '..\..\..\assets\areia.png'
+        pedra - '..\..\..\assets\pedra.png'
+        neve - '..\..\..\assets\neve.png'
+
+
+    Estruturas:
+        arvore:
+            [nada, folhas, nada]
+            [folhas, folhas, folhas]
+            [nada, madeira, nada]
+
+
+    Biomas:
+        ilha - bg[areia], tiles[terra]
+        ilhacentro - bg[grama], tiles[terra], estruturas[arvore]
+        mar - bg[agua], tiles[pedra]
+
+    Areas:
+        fundo - Retangulo((0, 0)vert, (30, 30)vert)
+        centro - Circulo((15, 15)c, 10r)
+        centro_ - Retangulo((10, 10)vert, (20, 20)vert)
+
+    Regioes: 
+        reg1 - ilha areas[ centro ]
+        reg2 - mar areas[ fundo ]
+
+        reg1_ - ilhacentro areas[ centro_ ]
+
+
+    Desenhe(reg2)
+    Desenhe(reg1)
+    Desenhe(reg1_)
+
+    Espalhe(arvore, reg1_)
+
+    Mostrar()
+    Salvar()
+    

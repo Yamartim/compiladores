@@ -1,0 +1,60 @@
+mapa inteiro 
+(declara o nome, a dimensao das tiles(em pixel), dimensao do mapa(em tiles))
+    - regioes
+        - um bioma
+        - uma area(estrutura?)
+    - biomas
+        - tile base
+        - lista de tilesets presentes
+        - lista de estruturas presentes?
+    - estruturas
+        - matriz de tiles especificas
+    - areas
+        - coordenadas especificas do mapa, pode ser declarada com tipo ponto(x, y), linha(ponto1, ponto2, grossura), retangulo(centro, lados), poligono(centro, raio, nlados)
+    - tilesets
+        - nome
+        - arquivo da tile (possivelmente mais que um? que muda aleatoriamente? possivelmente dar direcionalidade?)
+
+comandos: 
+    desenhe (estrutura/area)
+
+
+## exemplo de programa
+
+mapa m 32px 100x100:
+    tilesets:
+        agua - (arquivo da tile)
+        grama - (arquivo da tile)
+        terra - (arquivo da tile)
+        madeira -...
+        folhas -...
+        areia -...
+        pedra -...
+        neve -...
+
+
+    estruturas:
+        arvore 3x3
+            [null, folhas, null]
+            [folhas, folhas, folhas]
+            [null, madeira, null]
+
+        casa 5x5
+            [null, pedra, pedra, pedra, null]
+            [pedra, pedra, pedra, pedra, pedra]
+            [null, madeira, madeira, madeira, null]
+            [null, madeira, null, madeira, null]
+            [null, madeira, null, madeira, null]
+
+
+    biomas:
+        floresta - grama, [grama, terra, folhas, agua], [arvore, casa]
+        montanha - terra, [pedra, neve]
+        praia - areia, [agua, pedra]
+
+    regioes: 
+        rega - floresta area
+        regb - montanha area
+        regc - praia area
+    
+(resultado: gera um arquivo m.png)

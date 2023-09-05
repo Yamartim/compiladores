@@ -1,0 +1,51 @@
+
+mapa meuMapa2 32px 50 x 50
+    Tiles:
+        agua - '..\..\..\assets\agua.png'
+        grama - '..\..\..\assets\grama.png'
+        terra - '..\..\..\assets\terra.png'
+        madeira - '..\..\..\assets\madeira.png'
+        folhas - '..\..\..\assets\folhas.png'
+        areia - '..\..\..\assets\areia.png'
+        pedra - '..\..\..\assets\pedra.png'
+        neve - '..\..\..\assets\neve.png'
+
+    Estruturas:
+        arvore:
+            [nada, folhas, nada]
+            [folhas, folhas, folhas]
+            [nada, madeira, nada]
+
+        casa:
+            [nada, pedra, pedra, pedra, nada]
+            [pedra, pedra, pedra, pedra, pedra]
+            [nada, madeira, madeira, madeira, nada]
+            [nada, madeira, nada, madeira, nada]
+            [nada, madeira, nada, madeira, nada]
+
+
+    Biomas:
+        floresta - bg[grama], tiles[grama, terra, folhas, agua], estruturas[arvore, casa]
+        montanha - bg[terra], tiles[pedra, neve]
+        praia - bg[areia], tiles[agua, pedra]
+
+    Areas:
+        topo - Retangulo( (0, 0)vert, (50, 15)vert)
+        esquerda - Retangulo( (0, 15)vert, (35, 50)vert)
+        direita - Retangulo( (35, 15)vert, (50, 50)vert)
+
+    Regioes: 
+        rega - montanha areas[ topo ]
+        regb - floresta areas[ esquerda ]
+        regc - praia areas[ direita ]
+
+    Desenhe(rega)
+    Desenhe(regb)
+    Desenhe(regc)
+
+    Espalhe(casa, rega)
+    Espalhe(arvore, regb)
+
+    Mostrar()
+    Salvar()
+    

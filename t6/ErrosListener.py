@@ -2,12 +2,13 @@ from antlr4 import FileStream, CommonTokenStream, Token
 from antlr4.error.ErrorListener import ErrorListener
 from TileMapLexer import TileMapLexer
 from TileMapParser import TileMapParser
-from listaErros import *
+from listaErros import listaErros
 
 
 class ErroSintaticoListener( ErrorListener ):
     output = None
-    def __init__(self):
+    def __init__(self, lista_erros: listaErros):
+        self.erros = lista_erros
         super(ErroSintaticoListener, self).__init__()
 
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):  
@@ -15,8 +16,9 @@ class ErroSintaticoListener( ErrorListener ):
         if(offendingSymbol.text == '<EOF>'):
             offendingSymbol.text = 'EOF'
         #self.output.write(f'Linha {line}: erro sintatico proximo a {offendingSymbol.text}\n')
-        listaErros.adicionarErro(offendingSymbol.line, 'erro sintatico proximo a ' + offendingSymbol.text)
-        raise Exception("erro")
+        self.erros.adicionarErro(offendingSymbol.line, 'erro sintatico proximo a ' + offendingSymbol.text)
+        self.erros.printarErros()
+        raise Exception('erro')
 
     def reportAmbiguity(self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs):
         #raise Exception("Oh no2!!")
@@ -30,15 +32,17 @@ class ErroSintaticoListener( ErrorListener ):
         #raise Exception("Oh no4!!")
         pass
 
-def ErrosLexicos(lexer):
+def ErrosLexicos(lexer, lista_erros: listaErros):
     token = lexer.nextToken()
+
     while token.type != Token.EOF:
         tokenType = lexer.ruleNames[token.type - 1]
+        print(tokenType, token.text)
 
         if tokenType == 'CADEIANAOFECHADA':
-            listaErros.adicionarErro(token, 'cadeia literal nao fechada')
+            lista_erros.adicionarErro(token, 'cadeia literal nao fechada')
         elif tokenType == 'NaoIdentificado':
-            listaErros.adicionarErro(token, 'simbolo \'' + token.text + '\' nao identificado')
+            lista_erros.adicionarErro(token, 'simbolo \'' + token.text + '\' nao identificado')
 
         token = lexer.nextToken()
 

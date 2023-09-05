@@ -95,18 +95,81 @@ por exemplo:
 `floresta - bg[grama], tiles[grama, terra, folhas, agua], estruturas[arvore, casa]`
 
 seguindo o formato:
-`<nome do bioma> - 'bg[<tile do plano de fundo>], tiles[<nome das tiles presentes no bioma separadas por virgula></tiles>], [<nomes das estruturas presentes no bioma separadas por virgula>]'`
+`<nome do bioma> - bg[<tile do plano de fundo>], tiles[<nome das tiles presentes no bioma separadas por virgula></tiles>], [<nomes das estruturas presentes no bioma separadas por virgula>]`
 
 No momento apenas é o background é obrigatório e utilizado na declaração de um bioma.
 
 #### Areas
-documentação wip
+Para começar a declarar *areas* no seu programa utilize a expressão `Areas:` seguido por declarar areas individuais
+
+Areas individuais são sempre declaradas seguindo o formato:
+`<nome da area> - <forma geometrica>(<parametros corretos para a forma geométrica>)`
+
+
+*Areas* são a representações de espaço no mapa e podem ser declaradas nas seguintes formas geométricas:
+
+##### Ponto
+Pode ser declarado por si só ou usado como parte de outras formas, para usar em outras formas basta escrever uma tupla de números inteiros entre parenteses:
+`(<numero>, <numero>)`
+
+por exemplo:
+`(10, 10)`
+
+Para declarar um ponto com um nome dado se usa a seguinte sintaxe:
+`<nome> - (<numero>, <numero>)`
+
+por exemplo:
+`pt - (10, 10)`
+
+##### Linha
+
+Representa um segmento de reta que começa em um ponto e termina em outro, pode ser declarada com a seguinte sintaxe
+`<nome> - (<ponto> - <ponto>)`
+
+por exemplo:
+`lin - ((10, 10) - (20, 10))`
+
+##### Retangulo
+
+Representa uma area retangular e pode ser declarado de duas formas:
+
+###### Declaração com dois pontos
+Para essa declaração se da dois pontos que representam dois vértices opostos do retangulo:
+`<nome> - Retangulo(<ponto>vert, <ponto>vert)`
+
+por exemplo:
+`ret1 - Retangulo((10, 10)vert, (20, 20)vert)`
+
+###### Declaração com um ponto e dois lados
+Para essa declaração se um ponto que o centro do retangulo e dois números inteiros que representam a largura e altura do retangulo respectivamente:
+`<nome> - Retangulo(<ponto>c, <numero>lx, <numero>ly)`
+
+por exemplo:
+`ret2 - Retangulo((10, 10)c, 10lx, 5ly)`
+
+
+
+##### Círculo
+Representa uma area circular e pode ser declarado provendo como parametro um ponto para representar o centro e um número inteiro para representar o raio do circulo:
+`<nome> - Circulo(<ponto>c, <numero>r)`
+
+por exemplo:
+`circ - Circulo((10, 10)c, 5r)`
 
 #### Regiões
-documentação wip
+Para começar a declarar *regiões* no seu programa utilize a expressão `Regioes:` seguido por declarar regiões individuais
+
+Uma região representa um conjunto de várias areas com um bioma, para declarar uma região é necessario ter ja declarado pelo menos um bioma e uma área e utilizar a seguinte sintaxe:
+`<nome da regiao> - <bioma> areas[ <lista de areas separadas por vírgula> ]`
+
+por exemplo:
+`reg - floresta areas[ circ ]`
+
+**ATENÇÃO** no momento apenas uma area de cada vez é suportada ao declarar uma região
+
 
 #### Comandos
-documentação wip
+documentação wip,
 
 `Desenhe(<região>)`
 

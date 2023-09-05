@@ -169,12 +169,32 @@ por exemplo:
 
 
 #### Comandos
-documentação wip,
 
+Para de fato aplicar as regiões e estruturas no mapa e obter o mapa gerado é necessário usar comandos
+
+##### Desenhe
+O comando desenhe toma uma região declarada como parâmetro e aplica ela na imagem, note se duas regiões ocupam o mesmo espaço na imagem a que irá se sobressair será a que for desenhada por último então a ordem importa!
+
+Chama-se o comando dessa forma:
 `Desenhe(<região>)`
 
+por exemplo
+`Desenhe(reg)`
+
+##### Espalhe
+O comando espalhe toma uma estrutura e uma região como parâmetro e distribui várias cópias da estrutura pela região. Pode ser chamado dessa forma:
 `Espalhe(<estrutura>, <região>)`
 
+por exemplo
+`Espalhe(arvore, reg)`
+
+**ATENÇÃO** no momento apenas regiões declaradas com areas do tipo retangulo com dois vértices são suportadas para espalhar estruturas
+
+
+##### Mostrar
+O comando mostra a imagem gerada por meio do utilitário responsavel por isso do seu sistema operacional. Pode ser chamado com a sintaxe:
 `Mostrar()`
 
+##### Salvar
+O comando salva a imagem como um arquivo .png com o nome e diretorio definidos no segundo argumento dado ao rodar o arquivo main.py
 `Salvar()`
